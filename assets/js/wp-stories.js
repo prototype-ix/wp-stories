@@ -1,6 +1,6 @@
 /**
  * WP Stories – Frontend Logic
- * Version: 0.0.1b
+ * Version: 0.0.2
  * Author:  Alejandro Pantoja Malatesta / seekingdog.com
  */
 
@@ -24,6 +24,8 @@
   let touchStartY = 0;
   let isDragging  = false;
 
+  let isEditMode  = false;
+
   /* =========================================================================
    * DOM References (built once)
    * ====================================================================== */
@@ -31,24 +33,36 @@
       navPrev, navNext, tapPrev, tapNext, sidePrevEl, sideNextEl;
 
   /* =========================================================================
+   * SVG icon helpers
+   * ====================================================================== */
+  const ICONS = {
+    'arrow-up': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="18 15 12 9 6 15"/></svg>',
+    'link':     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>',
+    'external': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>',
+  };
+
+  /* =========================================================================
    * Build overlay DOM (once)
    * ====================================================================== */
   function buildOverlay() {
     if ( document.getElementById( 'wps-viewer-overlay' ) ) return;
 
+    isEditMode = !! ( window.elementorFrontend && window.elementorFrontend.isEditMode &&
+                      window.elementorFrontend.isEditMode() );
+
     // Root overlay
     overlay = document.createElement( 'div' );
-    overlay.className = 'wps-viewer-overlay';
+    overlay.className = 'wps-viewer-overlay' + ( isEditMode ? ' wps-edit-mode' : '' );
     overlay.id        = 'wps-viewer-overlay';
     overlay.setAttribute( 'role', 'dialog' );
     overlay.setAttribute( 'aria-modal', 'true' );
     overlay.setAttribute( 'aria-label', 'Stories viewer' );
 
-    // Inner flex row
+    // Inner flex row: [sidePrev][navPrev][viewport][navNext][sideNext]
     viewerInner = document.createElement( 'div' );
     viewerInner.className = 'wps-viewer-inner';
 
-    // ---- Side preview – PREV ----
+    // Side preview – PREV
     sidePrevEl = document.createElement( 'div' );
     sidePrevEl.className = 'wps-side-preview wps-side-prev';
     sidePrevEl.innerHTML =
@@ -58,13 +72,14 @@
       +   '<span class="wps-side-preview-name"></span>'
       + '</div>';
 
-    // ---- Nav prev ----
+    // Nav prev
     navPrev = document.createElement( 'button' );
     navPrev.className = 'wps-nav-btn wps-nav-prev';
     navPrev.setAttribute( 'aria-label', 'Previous story' );
+    navPrev.type = 'button';
     navPrev.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>';
 
-    // ---- Main viewport ----
+    // Main viewport
     viewport = document.createElement( 'div' );
     viewport.className = 'wps-story-viewport';
 
@@ -79,6 +94,7 @@
 
     closeBtn = document.createElement( 'button' );
     closeBtn.className = 'wps-close-btn';
+    closeBtn.type = 'button';
     closeBtn.setAttribute( 'aria-label', 'Close stories' );
     closeBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
 
@@ -98,13 +114,14 @@
     viewport.appendChild( tapPrev );
     viewport.appendChild( tapNext );
 
-    // ---- Nav next ----
+    // Nav next
     navNext = document.createElement( 'button' );
     navNext.className = 'wps-nav-btn wps-nav-next';
     navNext.setAttribute( 'aria-label', 'Next story' );
+    navNext.type = 'button';
     navNext.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>';
 
-    // ---- Side preview – NEXT ----
+    // Side preview – NEXT
     sideNextEl = document.createElement( 'div' );
     sideNextEl.className = 'wps-side-preview wps-side-next';
     sideNextEl.innerHTML =
@@ -114,7 +131,6 @@
       +   '<span class="wps-side-preview-name"></span>'
       + '</div>';
 
-    // Assemble: [sidePrev] [navPrev] [viewport] [navNext] [sideNext]
     viewerInner.appendChild( sidePrevEl );
     viewerInner.appendChild( navPrev );
     viewerInner.appendChild( viewport );
@@ -123,31 +139,23 @@
     overlay.appendChild( viewerInner );
     document.body.appendChild( overlay );
 
-    // ---- Events ----
+    // Events
     closeBtn.addEventListener( 'click', closeViewer );
-
     navPrev.addEventListener( 'click', function() { changeUser( currentUserIdx - 1, 'right' ); } );
     navNext.addEventListener( 'click', function() { changeUser( currentUserIdx + 1, 'left' ); } );
-
     sidePrevEl.addEventListener( 'click', function() { changeUser( currentUserIdx - 1, 'right' ); } );
     sideNextEl.addEventListener( 'click', function() { changeUser( currentUserIdx + 1, 'left' ); } );
-
     tapPrev.addEventListener( 'click', prevSlide );
     tapNext.addEventListener( 'click', nextSlide );
 
-    // Touch events on the viewport
     viewport.addEventListener( 'touchstart', onTouchStart, { passive: true } );
     viewport.addEventListener( 'touchmove',  onTouchMove,  { passive: false } );
     viewport.addEventListener( 'touchend',   onTouchEnd,   { passive: true } );
 
-    // Hold-to-pause (desktop mouse)
     viewport.addEventListener( 'mousedown', pauseTimer );
     viewport.addEventListener( 'mouseup',   resumeTimer );
 
-    // Keyboard
     document.addEventListener( 'keydown', onKeyDown );
-
-    // Android back button
     window.addEventListener( 'popstate', onPopState );
   }
 
@@ -160,25 +168,27 @@
     currentUserIdx  = userIdx;
     currentSlideIdx = 0;
 
-    document.body.classList.add( 'wps-open' );
+    if ( ! isEditMode ) {
+      document.body.classList.add( 'wps-open' );
+      history.pushState( { wpsOpen: true }, '' );
+    }
+
     overlay.classList.add( 'wps-visible' );
-
-    history.pushState( { wpsOpen: true }, '' );
-
     renderUser( currentUserIdx );
   }
 
   function closeViewer() {
     stopTimer();
     overlay.classList.remove( 'wps-visible' );
-    document.body.classList.remove( 'wps-open' );
 
-    if ( history.state && history.state.wpsOpen ) {
-      history.back();
+    if ( ! isEditMode ) {
+      document.body.classList.remove( 'wps-open' );
+      if ( history.state && history.state.wpsOpen ) history.back();
     }
 
     setTimeout( function() {
-      viewport.querySelectorAll( '.wps-story-image' ).forEach( function( el ) { el.remove(); } );
+      viewport.querySelectorAll( '.wps-story-image, .wps-link-btn, .wps-text-overlay' )
+               .forEach( function( el ) { el.remove(); } );
       progressBar.innerHTML = '';
     }, 300 );
 
@@ -186,7 +196,7 @@
   }
 
   /* =========================================================================
-   * Render a user's slides
+   * Render a user
    * ====================================================================== */
   function renderUser( userIdx ) {
     if ( ! activeWidget ) return;
@@ -199,15 +209,16 @@
     const circleEl = activeWidget.el.querySelector( '[data-story-index="' + userIdx + '"]' );
     if ( circleEl ) circleEl.classList.add( 'wps-seen' );
 
-    // Update header
+    // Header
     header.querySelector( 'img' ).src = user.avatar || '';
     header.querySelector( 'img' ).alt = user.username || '';
     header.querySelector( '.wps-story-header-name' ).textContent = user.username || '';
 
-    // Clear old images
-    viewport.querySelectorAll( '.wps-story-image' ).forEach( function( el ) { el.remove(); } );
+    // Clear previous slide images and overlays
+    viewport.querySelectorAll( '.wps-story-image, .wps-link-btn, .wps-text-overlay' )
+             .forEach( function( el ) { el.remove(); } );
 
-    // Build progress segments
+    // Progress segments
     progressBar.innerHTML = '';
     ( user.slides || [] ).forEach( function( _, i ) {
       const seg  = document.createElement( 'div' );
@@ -219,23 +230,117 @@
       progressBar.appendChild( seg );
     } );
 
-    // Build slide images
+    // Slide images with per-user image styles
     ( user.slides || [] ).forEach( function( slide, i ) {
       const div = document.createElement( 'div' );
       div.className = 'wps-story-image';
       div.dataset.index = i;
+      if ( user.imgBg ) div.style.backgroundColor = user.imgBg;
+
       const img = document.createElement( 'img' );
       img.src = slide.src || '';
       img.alt = slide.alt || '';
       img.style.objectFit = slide.fit || 'contain';
+      if ( user.imgW && user.imgW !== '100%' ) img.style.width  = user.imgW;
+      if ( user.imgH && user.imgH !== '100%' ) img.style.height = user.imgH;
+
       div.appendChild( img );
       viewport.appendChild( div );
     } );
 
-    // Update side previews and nav arrows
+    // Link button
+    if ( user.link && user.link.on && user.link.url ) {
+      viewport.appendChild( createLinkBtn( user.link ) );
+    }
+
+    // Text overlay
+    if ( user.txt && user.txt.on && user.txt.html ) {
+      viewport.appendChild( createTextOverlay( user.txt ) );
+    }
+
+    // Side previews + nav visibility
     updateSidePreviews( userIdx );
 
     showSlide( currentSlideIdx );
+  }
+
+  /* =========================================================================
+   * Link button element
+   * ====================================================================== */
+  function createLinkBtn( cfg ) {
+    const a = document.createElement( 'a' );
+    a.className = 'wps-link-btn';
+    a.href      = cfg.url;
+    a.target    = cfg.target || '_blank';
+    if ( cfg.target === '_blank' ) a.rel = 'noopener noreferrer';
+
+    // Inline styles from configuration
+    a.style.cssText = [
+      'bottom:' + ( 100 - cfg.posY ) + '%',
+      'color:'  + cfg.color,
+      'background:' + cfg.bg,
+      'border:' + cfg.bdW + 'px solid ' + cfg.bdColor,
+      'border-radius:' + cfg.bdR + 'px',
+      'font-size:' + cfg.fs + 'px',
+      'font-weight:' + cfg.fw,
+      'padding:' + cfg.pV + 'px ' + cfg.pH + 'px',
+    ].join(';');
+
+    // Icon
+    const iconKey = cfg.icon || 'arrow-up';
+    if ( iconKey !== 'none' && ICONS[ iconKey ] ) {
+      const iconWrap = document.createElement( 'span' );
+      iconWrap.className = 'wps-link-btn-icon';
+      iconWrap.innerHTML = ICONS[ iconKey ];
+      a.appendChild( iconWrap );
+    }
+
+    // Text
+    if ( cfg.text ) {
+      const textSpan = document.createElement( 'span' );
+      textSpan.textContent = cfg.text;
+      a.appendChild( textSpan );
+    }
+
+    // Prevent tap zones from firing when link is clicked
+    a.addEventListener( 'click', function( e ) { e.stopPropagation(); } );
+
+    return a;
+  }
+
+  /* =========================================================================
+   * Text overlay element
+   * ====================================================================== */
+  function createTextOverlay( cfg ) {
+    const div = document.createElement( 'div' );
+    div.className = 'wps-text-overlay';
+
+    // Position: left = X%, top = Y%, with transform based on anchor
+    let translateX = '0';
+    if ( cfg.ox === 'center' ) translateX = '-50%';
+    if ( cfg.ox === 'right'  ) translateX = '-100%';
+
+    div.style.cssText = [
+      'left:' + cfg.x + '%',
+      'top:'  + cfg.y + '%',
+      'transform:translate(' + translateX + ',-50%)',
+      'width:' + cfg.w,
+      'min-height:' + ( cfg.mh || 'auto' ),
+      'color:' + cfg.c,
+      'background:' + ( cfg.bg || 'transparent' ),
+      'font-size:' + cfg.fs + 'px',
+      'font-weight:' + cfg.fw,
+      'text-align:' + cfg.ta,
+      'line-height:' + cfg.lh,
+      'letter-spacing:' + cfg.ls + 'px',
+      'padding:' + cfg.pV + 'px ' + cfg.pH + 'px',
+      'border-radius:' + cfg.br + 'px',
+    ].join(';');
+
+    // Use innerHTML to allow basic formatting tags; content is wp_kses_post sanitized server-side
+    div.innerHTML = cfg.html;
+
+    return div;
   }
 
   /* =========================================================================
@@ -244,7 +349,6 @@
   function updateSidePreviews( userIdx ) {
     const stories = activeWidget.stories;
 
-    // Previous user preview
     if ( userIdx > 0 ) {
       const prev       = stories[ userIdx - 1 ];
       const firstSlide = prev.slides && prev.slides[0];
@@ -259,7 +363,6 @@
       navPrev.style.visibility    = 'hidden';
     }
 
-    // Next user preview
     if ( userIdx < stories.length - 1 ) {
       const next       = stories[ userIdx + 1 ];
       const firstSlide = next.slides && next.slides[0];
@@ -320,7 +423,6 @@
   function prevSlide() {
     if ( ! activeWidget ) return;
     stopTimer();
-
     if ( currentSlideIdx > 0 ) {
       showSlide( currentSlideIdx - 1 );
     } else {
@@ -333,9 +435,7 @@
    * ====================================================================== */
   function changeUser( newIdx, direction ) {
     if ( ! activeWidget ) return;
-    const stories = activeWidget.stories;
-
-    if ( newIdx < 0 || newIdx >= stories.length ) {
+    if ( newIdx < 0 || newIdx >= activeWidget.stories.length ) {
       closeViewer();
       return;
     }
@@ -354,7 +454,7 @@
   }
 
   /* =========================================================================
-   * Timer (rAF-based for smooth progress bar)
+   * Timer (rAF-based)
    * ====================================================================== */
   function startTimer( duration ) {
     stopTimer();
@@ -368,13 +468,9 @@
     timerStart = performance.now();
 
     function tick( now ) {
-      if ( paused ) {
-        timer = requestAnimationFrame( tick );
-        return;
-      }
+      if ( paused ) { timer = requestAnimationFrame( tick ); return; }
       const elapsed = now - timerStart;
       fill.style.width = Math.min( elapsed / timerDuration * 100, 100 ) + '%';
-
       if ( elapsed >= timerDuration ) {
         fill.classList.add( 'wps-done' );
         nextSlide();
@@ -419,15 +515,13 @@
     const dx = e.touches[0].clientX - touchStartX;
     const dy = e.touches[0].clientY - touchStartY;
 
-    if ( ! isDragging && ( Math.abs(dx) > 8 || Math.abs(dy) > 8 ) ) {
-      isDragging = true;
-    }
+    if ( ! isDragging && ( Math.abs(dx) > 8 || Math.abs(dy) > 8 ) ) isDragging = true;
 
     if ( isDragging && Math.abs(dy) > Math.abs(dx) && dy > 0 ) {
       e.preventDefault();
       viewport.classList.add( 'wps-dragging' );
       const scale   = Math.max( 0.88, 1 - dy / 600 );
-      const opacity = Math.max( 0.2, 1 - dy / 280 );
+      const opacity = Math.max( 0.2,  1 - dy / 280 );
       viewport.style.transform = 'scale(' + scale + ') translateY(' + ( dy * 0.35 ) + 'px)';
       overlay.style.opacity    = opacity;
     }
@@ -444,17 +538,14 @@
     overlay.style.opacity    = '';
 
     if ( isDragging ) {
-      if ( absDy > absDx && dy > 80 ) {
-        closeViewer();
-        return;
-      } else if ( absDx > absDy && absDx > 50 ) {
+      if ( absDy > absDx && dy > 80 )        { closeViewer(); return; }
+      if ( absDx > absDy && absDx > 50 )  {
         if ( dx < 0 ) changeUser( currentUserIdx + 1, 'left' );
         else          changeUser( currentUserIdx - 1, 'right' );
         return;
       }
     }
 
-    // Short tap → handled by tapPrev/tapNext click events
     resumeTimer();
     isDragging = false;
   }
@@ -470,7 +561,7 @@
   }
 
   /* =========================================================================
-   * Android back button
+   * Android back
    * ====================================================================== */
   function onPopState() {
     if ( overlay && overlay.classList.contains( 'wps-visible' ) ) {
@@ -486,16 +577,12 @@
    * ====================================================================== */
   function initWidgets() {
     document.querySelectorAll( '.wps-stories-widget' ).forEach( function( el ) {
-      // Avoid double-binding
       if ( el.dataset.wpsInit ) return;
       el.dataset.wpsInit = '1';
 
       let stories;
-      try {
-        stories = JSON.parse( el.dataset.stories || '[]' );
-      } catch(e) {
-        stories = [];
-      }
+      try { stories = JSON.parse( el.dataset.stories || '[]' ); }
+      catch(e) { stories = []; }
       if ( ! stories.length ) return;
 
       const widgetData = { el: el, stories: stories };
