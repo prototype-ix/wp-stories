@@ -26,20 +26,17 @@
 
   let isEditMode  = false;
 
+  // All initialized widget data – used for editor postMessage preview.
+  let allWidgetData = [];
+
   /* =========================================================================
    * DOM References (built once)
    * ====================================================================== */
   let overlay, viewerInner, viewport, progressBar, header, closeBtn,
       navPrev, navNext, tapPrev, tapNext, sidePrevEl, sideNextEl;
 
-  /* =========================================================================
-   * SVG icon helpers
-   * ====================================================================== */
-  const ICONS = {
-    'arrow-up': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="18 15 12 9 6 15"/></svg>',
-    'link':     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>',
-    'external': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>',
-  };
+  // Fallback SVG used when no iconHtml is pre-rendered (e.g. fresh editor instance).
+  const FALLBACK_LINK_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="wps-link-icon"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>';
 
   /* =========================================================================
    * Build overlay DOM (once)
@@ -157,6 +154,17 @@
 
     document.addEventListener( 'keydown', onKeyDown );
     window.addEventListener( 'popstate', onPopState );
+
+    // Editor postMessage: "▶ Abrir preview" button in Elementor panel
+    window.addEventListener( 'message', function( e ) {
+      if ( ! e.data || e.data.type !== 'wps-preview-open' ) return;
+      var idx     = parseInt( e.data.idx ) || 0;
+      var widget  = allWidgetData[0];            // use first (or only) widget
+      if ( widget && idx < widget.stories.length ) {
+        currentSlideIdx = 0;
+        openViewer( widget, idx );
+      }
+    } );
   }
 
   /* =========================================================================
@@ -274,35 +282,36 @@
     a.target    = cfg.target || '_blank';
     if ( cfg.target === '_blank' ) a.rel = 'noopener noreferrer';
 
-    // Inline styles from configuration
+    // Inline styles – all from per-user configuration
     a.style.cssText = [
       'bottom:' + ( 100 - cfg.posY ) + '%',
-      'color:'  + cfg.color,
-      'background:' + cfg.bg,
-      'border:' + cfg.bdW + 'px solid ' + cfg.bdColor,
-      'border-radius:' + cfg.bdR + 'px',
-      'font-size:' + cfg.fs + 'px',
-      'font-weight:' + cfg.fw,
-      'padding:' + cfg.pV + 'px ' + cfg.pH + 'px',
+      'color:'        + cfg.color,
+      'background:'   + cfg.bg,
+      'border:'       + cfg.bdW + 'px solid ' + cfg.bdColor,
+      'border-radius:'+ cfg.bdR + 'px',
+      'font-size:'    + cfg.fs  + 'px',
+      'font-weight:'  + cfg.fw,
+      'padding:'      + cfg.pV  + 'px ' + cfg.pH + 'px',
     ].join(';');
 
-    // Icon
-    const iconKey = cfg.icon || 'arrow-up';
-    if ( iconKey !== 'none' && ICONS[ iconKey ] ) {
+    // Icon – use pre-rendered HTML from PHP (supports any Elementor icon)
+    // Fall back to SVG link icon when in editor template mode.
+    const iconHtml = cfg.iconHtml || FALLBACK_LINK_SVG;
+    if ( iconHtml ) {
       const iconWrap = document.createElement( 'span' );
       iconWrap.className = 'wps-link-btn-icon';
-      iconWrap.innerHTML = ICONS[ iconKey ];
+      iconWrap.innerHTML = iconHtml;
       a.appendChild( iconWrap );
     }
 
-    // Text
+    // Text label
     if ( cfg.text ) {
       const textSpan = document.createElement( 'span' );
       textSpan.textContent = cfg.text;
       a.appendChild( textSpan );
     }
 
-    // Prevent tap zones from firing when link is clicked
+    // Prevent tap zones from firing when link is tapped
     a.addEventListener( 'click', function( e ) { e.stopPropagation(); } );
 
     return a;
@@ -586,6 +595,7 @@
       if ( ! stories.length ) return;
 
       const widgetData = { el: el, stories: stories };
+      allWidgetData.push( widgetData );
 
       el.querySelectorAll( '.wps-story-circle' ).forEach( function( btn ) {
         btn.addEventListener( 'click', function() {
