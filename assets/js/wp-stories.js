@@ -1,6 +1,6 @@
 /**
  * WP Stories – Frontend Logic
- * Version: 0.0.3b
+ * Version: 0.0.4
  * Author:  Alejandro Pantoja Malatesta / seekingdog.com
  */
 
@@ -584,6 +584,9 @@
       if ( ! stories.length ) return;
 
       const widgetData = { el: el, stories: stories };
+
+      // Replace stale entry for same widget ID (Elementor re-renders create new DOM nodes).
+      allWidgetData = allWidgetData.filter( function( w ) { return w.el.id !== el.id; } );
       allWidgetData.push( widgetData );
 
       el.querySelectorAll( '.wps-story-circle' ).forEach( function( btn ) {
@@ -611,13 +614,29 @@
     );
   }
 
-  // Editor postMessage: "▶ Abrir preview" button in Elementor panel.
-  // Registered at script-load time (not inside buildOverlay) so it's always
-  // available even before the user has clicked any circle in the preview.
+  // Editor postMessage: preview button in Elementor panel sends this message.
+  // Registered at script-load time so it's always available.
   window.addEventListener( 'message', function( e ) {
     if ( ! e.data || e.data.type !== 'wps-preview-open' ) return;
-    var idx    = parseInt( e.data.idx ) || 0;
-    var widget = allWidgetData[0];   // first (or only) widget on the page
+    var idx = parseInt( e.data.idx ) || 0;
+
+    // Re-scan DOM so we always have the latest widget data after Elementor re-renders.
+    initWidgets();
+
+    // Use the most recently registered widget (newest after re-render).
+    var widget = allWidgetData[ allWidgetData.length - 1 ];
+
+    // Last-resort: read directly from DOM.
+    if ( ! widget ) {
+      var el = document.querySelector( '.wps-stories-widget' );
+      if ( el ) {
+        try {
+          var s = JSON.parse( el.dataset.stories || '[]' );
+          if ( s.length ) widget = { el: el, stories: s };
+        } catch(e) {}
+      }
+    }
+
     if ( widget && idx < widget.stories.length ) {
       currentSlideIdx = 0;
       openViewer( widget, idx );

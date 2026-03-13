@@ -162,22 +162,85 @@ class Widget extends Widget_Base {
 		$repeater = new Repeater();
 
 		// ── Identity ─────────────────────────────────────────────────────────
-		// Preview button (visible only in Elementor editor – panel side)
+		// Preview button – shows inline preview inside the repeater panel item.
 		$repeater->add_control( 'preview_story_btn', [
 			'type' => Controls_Manager::RAW_HTML,
-			'raw'  => '<button type="button"
-				style="width:100%;padding:8px 0;margin-bottom:8px;background:#6a5acd;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:12px;font-weight:600;letter-spacing:.5px;"
+			'raw'  => '<button type="button" class="wps-preview-btn"
+				style="width:100%;padding:8px 0;margin-bottom:2px;background:#6a5acd;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:12px;font-weight:600;letter-spacing:.5px;"
 				onclick="(function(btn){
 					var row = btn.closest(\'.elementor-repeater-row\');
-					var idx = 0;
-					if (row) {
-						var allRows = row.closest(\'.elementor-repeater-fields-wrapper\')||row.parentElement;
-						var rows = allRows ? allRows.querySelectorAll(\':scope > .elementor-repeater-row\') : [];
-						rows.forEach(function(r,i){ if(r===row) idx=i; });
+					if (!row) return;
+
+					/* Toggle */
+					var existing = row.querySelector(\'.wps-inline-preview\');
+					if (existing) {
+						existing.remove();
+						btn.textContent = \'▶ Previsualizar story\';
+						return;
 					}
+
+					/* Story index */
+					var idx = 0;
+					var siblings = row.parentElement
+						? row.parentElement.querySelectorAll(\':scope > .elementor-repeater-row\')
+						: [];
+					siblings.forEach(function(r,i){ if(r===row) idx=i; });
+
+					/* Gallery images via Elementor Backbone model */
+					var imgs = [];
+					try {
+						var pv  = window.elementor && window.elementor.getPanelView();
+						var cv  = pv && pv.content && pv.content.currentView;
+						var st  = cv && cv.model && cv.model.get(\'settings\');
+						var col = st && st.get(\'stories\');
+						var m   = col && col.at(idx);
+						var gal = m && m.get(\'gallery\');
+						if (gal) gal.forEach(function(img){ if (img.url) imgs.push(img.url); });
+					} catch(e) {}
+
+					/* Build preview */
+					var wrap = document.createElement(\'div\');
+					wrap.className = \'wps-inline-preview\';
+					wrap.style.cssText = \'margin:4px 0 10px;border-radius:6px;overflow:hidden;background:#111;position:relative;\';
+
+					if (imgs.length) {
+						var curIdx = 0;
+						var imgEl  = document.createElement(\'img\');
+						imgEl.src  = imgs[0];
+						imgEl.style.cssText = \'width:100%;height:220px;object-fit:contain;display:block;background:#111;\';
+						wrap.appendChild(imgEl);
+
+						if (imgs.length > 1) {
+							var bar = document.createElement(\'div\');
+							bar.style.cssText = \'display:flex;justify-content:center;align-items:center;gap:5px;padding:5px 0;background:#1a1a1a;\';
+							imgs.forEach(function(src,i){
+								var dot = document.createElement(\'button\');
+								dot.type = \'button\';
+								dot.style.cssText = \'width:7px;height:7px;border-radius:50%;border:none;cursor:pointer;padding:0;background:\'+(i===0?\'#8b7cf8\':\'#444\')+\';\';
+								dot.addEventListener(\'click\', function(e){
+									e.stopPropagation();
+									curIdx = i;
+									imgEl.src = src;
+									bar.querySelectorAll(\'button\').forEach(function(b,j){ b.style.background = j===i ? \'#8b7cf8\' : \'#444\'; });
+								});
+								bar.appendChild(dot);
+							});
+							wrap.appendChild(bar);
+						}
+					} else {
+						var msg = document.createElement(\'p\');
+						msg.textContent = \'Sin imágenes — añade fotos en "Story Images".\';
+						msg.style.cssText = \'color:#888;text-align:center;padding:14px 8px;margin:0;font-size:11px;\';
+						wrap.appendChild(msg);
+					}
+
+					btn.insertAdjacentElement(\'afterend\', wrap);
+					btn.textContent = \'✕ Cerrar preview\';
+
+					/* Also trigger full viewer in preview iframe */
 					var frame = document.getElementById(\'elementor-preview-iframe\');
 					if (frame) frame.contentWindow.postMessage({type:\'wps-preview-open\',idx:idx},\'*\');
-				})(this)">▶ Abrir preview de esta story</button>',
+				})(this)">▶ Previsualizar story</button>',
 			'content_classes' => 'elementor-descriptor',
 		] );
 
@@ -767,8 +830,8 @@ class Widget extends Widget_Base {
 		$av_bg    = $this->sanitize_color( $settings['avatar_bg_color'] ?? '#333333' ) ?: '#333333';
 
 		$av_img_style  = sprintf(
-			'object-fit:%s;object-position:%s%% %s%%;transform:scale(%s%%);transform-origin:center;',
-			$av_fit, $av_pos_x, $av_pos_y, $av_scale
+			'object-fit:%s;object-position:%s%% %s%%;transform:scale(%s);transform-origin:center;',
+			$av_fit, $av_pos_x, $av_pos_y, $av_scale / 100
 		);
 		$av_wrap_style = 'background:' . esc_attr( $av_bg ) . ';';
 		?>
@@ -825,7 +888,7 @@ class Widget extends Widget_Base {
 		var avPosY  = ( settings.avatar_pos_y && settings.avatar_pos_y.size !== undefined ) ? settings.avatar_pos_y.size : 50;
 		var avScale = ( settings.avatar_scale  && settings.avatar_scale.size  !== undefined ) ? settings.avatar_scale.size  : 100;
 		var avBg    = settings.avatar_bg_color || '#333333';
-		var avImgStyle  = 'object-fit:' + avFit + ';object-position:' + avPosX + '% ' + avPosY + '%;transform:scale(' + avScale + '%);transform-origin:center;';
+		var avImgStyle  = 'object-fit:' + avFit + ';object-position:' + avPosX + '% ' + avPosY + '%;transform:scale(' + (avScale/100) + ');transform-origin:center;';
 		var avWrapStyle = 'background:' + avBg + ';';
 
 		var storyData = [];
