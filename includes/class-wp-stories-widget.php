@@ -654,23 +654,29 @@ class Widget extends Widget_Base {
 			'selectors'   => [ '{{WRAPPER}} .wps-ring-wrap::before' => 'background: {{VALUE}};' ],
 		] );
 
-		// ── Avatar Image ──────────────────────────────────────────────────────
-		$this->add_control( 'avatar_heading', [
-			'label'     => esc_html__( '── Imagen de avatar', 'wp-stories' ),
-			'type'      => Controls_Manager::HEADING,
-			'separator' => 'before',
+		$this->end_controls_section();
+
+		/* ============================================================
+		 * SECTION: Avatar Image (STYLE TAB)
+		 * ========================================================== */
+		$this->start_controls_section( 'section_avatar_style', [
+			'label' => esc_html__( 'Avatar Image', 'wp-stories' ),
+			'tab'   => Controls_Manager::TAB_STYLE,
 		] );
 
 		$this->add_control( 'avatar_fit', [
-			'label'   => esc_html__( 'Object-fit', 'wp-stories' ),
-			'type'    => Controls_Manager::SELECT,
-			'default' => 'cover',
-			'options' => [
+			'label'     => esc_html__( 'Object-fit', 'wp-stories' ),
+			'type'      => Controls_Manager::SELECT,
+			'default'   => 'cover',
+			'options'   => [
 				'cover'      => 'Cover — rellena, recorta si hace falta',
 				'contain'    => 'Contain — imagen completa, con fondo',
 				'fill'       => 'Fill — estira al círculo',
 				'none'       => 'None — tamaño natural',
 				'scale-down' => 'Scale-down',
+			],
+			'selectors' => [
+				'{{WRAPPER}} .wps-avatar img' => 'object-fit: {{VALUE}};',
 			],
 		] );
 
@@ -678,38 +684,49 @@ class Widget extends Widget_Base {
 			'label'       => esc_html__( 'Posición horizontal (%)', 'wp-stories' ),
 			'description' => esc_html__( '0 = izquierda · 50 = centro · 100 = derecha', 'wp-stories' ),
 			'type'        => Controls_Manager::SLIDER,
-			'range'       => [ 'px' => [ 'min' => 0, 'max' => 100 ] ],
-			'default'     => [ 'size' => 50 ],
+			'size_units'  => [ '%' ],
+			'range'       => [ '%' => [ 'min' => 0, 'max' => 100 ] ],
+			'default'     => [ 'size' => 50, 'unit' => '%' ],
+			'selectors'   => [
+				'{{WRAPPER}} .wps-avatar' => '--wps-av-x: {{SIZE}}{{UNIT}};',
+			],
 		] );
 
 		$this->add_control( 'avatar_pos_y', [
 			'label'       => esc_html__( 'Posición vertical (%)', 'wp-stories' ),
 			'description' => esc_html__( '0 = arriba · 50 = centro · 100 = abajo', 'wp-stories' ),
 			'type'        => Controls_Manager::SLIDER,
-			'range'       => [ 'px' => [ 'min' => 0, 'max' => 100 ] ],
-			'default'     => [ 'size' => 50 ],
+			'size_units'  => [ '%' ],
+			'range'       => [ '%' => [ 'min' => 0, 'max' => 100 ] ],
+			'default'     => [ 'size' => 50, 'unit' => '%' ],
+			'selectors'   => [
+				'{{WRAPPER}} .wps-avatar' => '--wps-av-y: {{SIZE}}{{UNIT}};',
+			],
 		] );
 
 		$this->add_control( 'avatar_bg_color', [
 			'label'       => esc_html__( 'Color de fondo del avatar', 'wp-stories' ),
-			'description' => esc_html__( 'Visible con object-fit: contain o imágenes PNG transparentes.', 'wp-stories' ),
+			'description' => esc_html__( 'Visible con object-fit: contain o PNG transparentes.', 'wp-stories' ),
 			'type'        => Controls_Manager::COLOR,
 			'default'     => '#333333',
+			'selectors'   => [
+				'{{WRAPPER}} .wps-avatar' => 'background: {{VALUE}};',
+			],
 		] );
 
 		$this->add_control( 'avatar_scale', [
 			'label'       => esc_html__( 'Escala imagen (%)', 'wp-stories' ),
-			'description' => esc_html__( '100 = normal · < 100 = más pequeña (deja margen) · > 100 = más grande (recorta)', 'wp-stories' ),
+			'description' => esc_html__( '100 = normal · < 100 = más pequeña · > 100 = más grande (recorta)', 'wp-stories' ),
 			'type'        => Controls_Manager::SLIDER,
+			'size_units'  => [ 'px' ],
 			'range'       => [ 'px' => [ 'min' => 10, 'max' => 200, 'step' => 1 ] ],
-			'default'     => [ 'size' => 100 ],
+			'default'     => [ 'size' => 100, 'unit' => 'px' ],
+			'selectors'   => [
+				'{{WRAPPER}} .wps-avatar img' => 'transform: scale(calc({{SIZE}} / 100)); transform-origin: center;',
+			],
 		] );
 
 		$this->end_controls_section();
-
-		/* ============================================================
-		 * SECTION: Username Typography
-		 * ========================================================== */
 		$this->start_controls_section( 'section_username_style', [
 			'label' => esc_html__( 'Username Style', 'wp-stories' ),
 			'tab'   => Controls_Manager::TAB_STYLE,
@@ -821,19 +838,6 @@ class Widget extends Widget_Base {
 		}
 
 		$widget_id = 'wps-' . $this->get_id();
-
-		// ── Avatar image inline styles (these override any CSS-file defaults) ──
-		$av_fit   = esc_attr( $settings['avatar_fit'] ?? 'cover' );
-		$av_pos_x = isset( $settings['avatar_pos_x']['size'] ) ? (float) $settings['avatar_pos_x']['size'] : 50;
-		$av_pos_y = isset( $settings['avatar_pos_y']['size'] ) ? (float) $settings['avatar_pos_y']['size'] : 50;
-		$av_scale = isset( $settings['avatar_scale']['size']  ) ? (float) $settings['avatar_scale']['size']  : 100;
-		$av_bg    = $this->sanitize_color( $settings['avatar_bg_color'] ?? '#333333' ) ?: '#333333';
-
-		$av_img_style  = sprintf(
-			'object-fit:%s;object-position:%s%% %s%%;transform:scale(%s);transform-origin:center;',
-			$av_fit, $av_pos_x, $av_pos_y, $av_scale / 100
-		);
-		$av_wrap_style = 'background:' . esc_attr( $av_bg ) . ';';
 		?>
 		<div
 			class="wps-stories-widget"
@@ -854,12 +858,11 @@ class Widget extends Widget_Base {
 					<?php echo $has_slides ? '' : 'disabled'; ?>
 				>
 					<span class="wps-ring-wrap">
-						<span class="wps-avatar" style="<?php echo $av_wrap_style; ?>">
+						<span class="wps-avatar">
 							<?php if ( ! empty( $story['avatar']['url'] ) ) : ?>
 								<img src="<?php echo esc_url( $story['avatar']['url'] ); ?>"
 								     alt="<?php echo esc_attr( $story['username'] ?? '' ); ?>"
-								     loading="lazy"
-								     style="<?php echo $av_img_style; ?>">
+								     loading="lazy">
 							<?php else : ?>
 								<span class="wps-avatar-placeholder"></span>
 							<?php endif; ?>
@@ -882,14 +885,6 @@ class Widget extends Widget_Base {
 	protected function content_template() {
 		?>
 		<#
-		// Avatar image inline styles – computed once, applied to every avatar
-		var avFit   = settings.avatar_fit || 'cover';
-		var avPosX  = ( settings.avatar_pos_x && settings.avatar_pos_x.size !== undefined ) ? settings.avatar_pos_x.size : 50;
-		var avPosY  = ( settings.avatar_pos_y && settings.avatar_pos_y.size !== undefined ) ? settings.avatar_pos_y.size : 50;
-		var avScale = ( settings.avatar_scale  && settings.avatar_scale.size  !== undefined ) ? settings.avatar_scale.size  : 100;
-		var avBg    = settings.avatar_bg_color || '#333333';
-		var avImgStyle  = 'object-fit:' + avFit + ';object-position:' + avPosX + '% ' + avPosY + '%;transform:scale(' + (avScale/100) + ');transform-origin:center;';
-		var avWrapStyle = 'background:' + avBg + ';';
 
 		var storyData = [];
 		_.each( settings.stories, function( story, idx ) {
@@ -970,9 +965,9 @@ class Widget extends Widget_Base {
 				#>
 				<button class="wps-story-circle" data-story-index="{{ idx }}">
 					<span class="wps-ring-wrap">
-						<span class="wps-avatar" style="{{ avWrapStyle }}">
+						<span class="wps-avatar" >
 							<# if ( avatarUrl ) { #>
-								<img src="{{ avatarUrl }}" alt="{{ story.username }}" style="{{ avImgStyle }}">
+								<img src="{{ avatarUrl }}" alt="{{ story.username }}">
 							<# } else { #>
 								<span class="wps-avatar-placeholder"></span>
 							<# } #>

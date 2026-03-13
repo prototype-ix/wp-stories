@@ -115,7 +115,11 @@
   display: block;
   border-radius: 50%;
   pointer-events: none; user-select: none; -webkit-user-drag: none;
-  /* object-fit, object-position, transform: controlled via inline styles from widget settings */
+  /* object-fit and transform are injected by Elementor selectors.
+     object-position combines --wps-av-x / --wps-av-y CSS variables
+     (also injected by Elementor selectors, set on the .wps-avatar parent). */
+  object-fit: cover;
+  object-position: var(--wps-av-x, 50%) var(--wps-av-y, 50%);
 }
 .wps-avatar-placeholder {
   display: block; width: 100%; height: 100%;
@@ -497,38 +501,10 @@ body.wps-open { overflow: hidden; touch-action: none; }
 
 /* --------------------------------------------------------------------------
    Elementor Editor Preview Mode
-   – The overlay is transparent and the viewport floats as a compact panel
-     in the bottom-right of the Elementor preview iframe.
-     The Elementor panel sidebar is outside the iframe, so it is never covered.
+   – Full-screen overlay inside the iframe, same as frontend.
+     The Elementor panel sidebar is outside the iframe so it is never covered.
+     Side previews and nav arrows are hidden to keep it compact.
    -------------------------------------------------------------------------- */
-.wps-viewer-overlay.wps-edit-mode {
-  background: transparent !important;
-  pointer-events: none;
-}
-.wps-viewer-overlay.wps-edit-mode.wps-visible {
-  /* keep pointer-events none on backdrop; only the inner card is interactive */
-  pointer-events: none;
-}
-.wps-viewer-overlay.wps-edit-mode .wps-viewer-inner {
-  /* Override the flex fill — position card in bottom-right corner */
-  pointer-events: all;
-  position: fixed;
-  right: 16px;
-  bottom: 16px;
-  width: auto;
-  height: auto;
-  top: auto;
-  left: auto;
-  padding: 0;
-  gap: 0;
-}
-.wps-viewer-overlay.wps-edit-mode .wps-story-viewport {
-  /* Slightly smaller in editor so it doesn't dominate the preview */
-  width: min(340px, 90vw);
-  height: min(604px, 88vh);
-  box-shadow: 0 16px 64px rgba(0,0,0,0.75);
-}
-/* Hide side previews and nav arrows in edit mode */
 .wps-viewer-overlay.wps-edit-mode .wps-side-preview,
 .wps-viewer-overlay.wps-edit-mode .wps-nav-btn {
   display: none !important;
