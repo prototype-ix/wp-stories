@@ -1,6 +1,6 @@
 /**
  * WP Stories – Frontend Logic
- * Version: 0.0.5
+ * Version: 0.0.6
  * Author:  Alejandro Pantoja Malatesta / seekingdog.com
  */
 
@@ -607,12 +607,46 @@
     initWidgets();
   }
 
-  if ( window.elementorFrontend ) {
+  // Elementor hook (fires after widget renders in both editor and frontend).
+  var _hookRegistered = false;
+  function _registerElementorHook() {
+    if ( _hookRegistered || ! window.elementorFrontend ) return;
+    _hookRegistered = true;
     window.elementorFrontend.hooks.addAction(
       'frontend/element_ready/wp-stories.default',
       function() { initWidgets(); }
     );
   }
+  _registerElementorHook();
+
+  // In the Elementor editor the hook registration might run before elementorFrontend
+  // is ready. Use a MutationObserver as a reliable fallback: call initWidgets()
+  // whenever new .wps-stories-widget nodes appear in the DOM.
+  if ( typeof MutationObserver !== 'undefined' ) {
+    var _observer = new MutationObserver( function( mutations ) {
+      var needsInit = false;
+      mutations.forEach( function( m ) {
+        m.addedNodes.forEach( function( node ) {
+          if ( node.nodeType !== 1 ) return;
+          if ( node.classList && node.classList.contains( 'wps-stories-widget' ) ) {
+            needsInit = true;
+          } else if ( node.querySelector && node.querySelector( '.wps-stories-widget' ) ) {
+            needsInit = true;
+          }
+        } );
+      } );
+      if ( needsInit ) initWidgets();
+    } );
+    _observer.observe( document.documentElement, { childList: true, subtree: true } );
+  }
+
+  // Also register the Elementor hook once elementorFrontend is available
+  // (in case it wasn't ready at script-load time).
+  document.addEventListener( 'DOMContentLoaded', function() {
+    _registerElementorHook();
+    // Retry a second time for slow Elementor initialisation.
+    setTimeout( function() { _registerElementorHook(); initWidgets(); }, 800 );
+  } );
 
   // Editor postMessage: preview button in Elementor panel sends this message.
   // Registered at script-load time so it's always available.

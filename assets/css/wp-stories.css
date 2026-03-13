@@ -113,11 +113,9 @@
 .wps-avatar img {
   width: 100%; height: 100%;
   display: block;
-  border-radius: 50%;
   pointer-events: none; user-select: none; -webkit-user-drag: none;
-  /* object-fit and transform are injected by Elementor selectors.
-     object-position combines --wps-av-x / --wps-av-y CSS variables
-     (also injected by Elementor selectors, set on the .wps-avatar parent). */
+  /* border-radius is intentionally NOT set here — the parent's overflow:hidden
+     + border-radius:50% handles the circular crop without sub-pixel artifacts. */
   object-fit: cover;
   object-position: var(--wps-av-x, 50%) var(--wps-av-y, 50%);
 }

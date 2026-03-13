@@ -162,7 +162,8 @@ class Widget extends Widget_Base {
 		$repeater = new Repeater();
 
 		// ── Identity ─────────────────────────────────────────────────────────
-		// Preview button – shows inline preview inside the repeater panel item.
+		// Preview button – reads story data from the preview iframe DOM (always reflects
+		// the current unsaved state) and shows inline thumbnails + opens the full viewer.
 		$repeater->add_control( 'preview_story_btn', [
 			'type' => Controls_Manager::RAW_HTML,
 			'raw'  => '<button type="button" class="wps-preview-btn"
@@ -186,27 +187,31 @@ class Widget extends Widget_Base {
 						: [];
 					siblings.forEach(function(r,i){ if(r===row) idx=i; });
 
-					/* Gallery images via Elementor Backbone model */
+					/* Read gallery images from the preview iframe data-stories JSON.
+					   This always reflects the current (unsaved) state of the widget. */
 					var imgs = [];
 					try {
-						var pv  = window.elementor && window.elementor.getPanelView();
-						var cv  = pv && pv.content && pv.content.currentView;
-						var st  = cv && cv.model && cv.model.get(\'settings\');
-						var col = st && st.get(\'stories\');
-						var m   = col && col.at(idx);
-						var gal = m && m.get(\'gallery\');
-						if (gal) gal.forEach(function(img){ if (img.url) imgs.push(img.url); });
+						var frame = document.getElementById(\'elementor-preview-iframe\');
+						if (frame && frame.contentDocument) {
+							var wEl = frame.contentDocument.querySelector(\'.wps-stories-widget\');
+							if (wEl) {
+								var stories = JSON.parse(wEl.dataset.stories || \'[]\');
+								var story   = stories[idx];
+								if (story && story.slides) {
+									imgs = story.slides.map(function(s){ return s.src; }).filter(Boolean);
+								}
+							}
+						}
 					} catch(e) {}
 
-					/* Build preview */
+					/* Build inline preview */
 					var wrap = document.createElement(\'div\');
 					wrap.className = \'wps-inline-preview\';
 					wrap.style.cssText = \'margin:4px 0 10px;border-radius:6px;overflow:hidden;background:#111;position:relative;\';
 
 					if (imgs.length) {
-						var curIdx = 0;
-						var imgEl  = document.createElement(\'img\');
-						imgEl.src  = imgs[0];
+						var imgEl = document.createElement(\'img\');
+						imgEl.src = imgs[0];
 						imgEl.style.cssText = \'width:100%;height:220px;object-fit:contain;display:block;background:#111;\';
 						wrap.appendChild(imgEl);
 
@@ -219,7 +224,6 @@ class Widget extends Widget_Base {
 								dot.style.cssText = \'width:7px;height:7px;border-radius:50%;border:none;cursor:pointer;padding:0;background:\'+(i===0?\'#8b7cf8\':\'#444\')+\';\';
 								dot.addEventListener(\'click\', function(e){
 									e.stopPropagation();
-									curIdx = i;
 									imgEl.src = src;
 									bar.querySelectorAll(\'button\').forEach(function(b,j){ b.style.background = j===i ? \'#8b7cf8\' : \'#444\'; });
 								});
@@ -237,9 +241,9 @@ class Widget extends Widget_Base {
 					btn.insertAdjacentElement(\'afterend\', wrap);
 					btn.textContent = \'✕ Cerrar preview\';
 
-					/* Also trigger full viewer in preview iframe */
-					var frame = document.getElementById(\'elementor-preview-iframe\');
-					if (frame) frame.contentWindow.postMessage({type:\'wps-preview-open\',idx:idx},\'*\');
+					/* Open full viewer in preview iframe */
+					var fr = document.getElementById(\'elementor-preview-iframe\');
+					if (fr) fr.contentWindow.postMessage({type:\'wps-preview-open\',idx:idx},\'*\');
 				})(this)">▶ Previsualizar story</button>',
 			'content_classes' => 'elementor-descriptor',
 		] );
