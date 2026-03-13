@@ -37,10 +37,11 @@ function wp_stories_init() {
 		return;
 	}
 
-	require_once WP_STORIES_PATH . 'includes/class-wp-stories-widget.php';
-
 	// Register widget with Elementor.
+	// require_once is placed INSIDE this callback so Elementor's autoloader
+	// has already run and Widget_Base (and all other Elementor classes) exist.
 	add_action( 'elementor/widgets/register', function( $widgets_manager ) {
+		require_once WP_STORIES_PATH . 'includes/class-wp-stories-widget.php';
 		$widgets_manager->register( new \WP_Stories\Widget() );
 	} );
 
