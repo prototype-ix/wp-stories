@@ -1,6 +1,6 @@
 /**
  * WP Stories – Frontend Logic
- * Version: 0.0.2
+ * Version: 0.0.3b
  * Author:  Alejandro Pantoja Malatesta / seekingdog.com
  */
 
@@ -154,17 +154,6 @@
 
     document.addEventListener( 'keydown', onKeyDown );
     window.addEventListener( 'popstate', onPopState );
-
-    // Editor postMessage: "▶ Abrir preview" button in Elementor panel
-    window.addEventListener( 'message', function( e ) {
-      if ( ! e.data || e.data.type !== 'wps-preview-open' ) return;
-      var idx     = parseInt( e.data.idx ) || 0;
-      var widget  = allWidgetData[0];            // use first (or only) widget
-      if ( widget && idx < widget.stories.length ) {
-        currentSlideIdx = 0;
-        openViewer( widget, idx );
-      }
-    } );
   }
 
   /* =========================================================================
@@ -621,5 +610,18 @@
       function() { initWidgets(); }
     );
   }
+
+  // Editor postMessage: "▶ Abrir preview" button in Elementor panel.
+  // Registered at script-load time (not inside buildOverlay) so it's always
+  // available even before the user has clicked any circle in the preview.
+  window.addEventListener( 'message', function( e ) {
+    if ( ! e.data || e.data.type !== 'wps-preview-open' ) return;
+    var idx    = parseInt( e.data.idx ) || 0;
+    var widget = allWidgetData[0];   // first (or only) widget on the page
+    if ( widget && idx < widget.stories.length ) {
+      currentSlideIdx = 0;
+      openViewer( widget, idx );
+    }
+  } );
 
 } )();

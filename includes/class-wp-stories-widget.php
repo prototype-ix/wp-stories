@@ -599,17 +599,16 @@ class Widget extends Widget_Base {
 		] );
 
 		$this->add_control( 'avatar_fit', [
-			'label'     => esc_html__( 'Object-fit', 'wp-stories' ),
-			'type'      => Controls_Manager::SELECT,
-			'default'   => 'cover',
-			'options'   => [
+			'label'   => esc_html__( 'Object-fit', 'wp-stories' ),
+			'type'    => Controls_Manager::SELECT,
+			'default' => 'cover',
+			'options' => [
 				'cover'      => 'Cover — rellena, recorta si hace falta',
 				'contain'    => 'Contain — imagen completa, con fondo',
 				'fill'       => 'Fill — estira al círculo',
 				'none'       => 'None — tamaño natural',
 				'scale-down' => 'Scale-down',
 			],
-			'selectors' => [ '{{WRAPPER}} .wps-avatar img' => 'object-fit: {{VALUE}};' ],
 		] );
 
 		$this->add_control( 'avatar_pos_x', [
@@ -618,7 +617,6 @@ class Widget extends Widget_Base {
 			'type'        => Controls_Manager::SLIDER,
 			'range'       => [ 'px' => [ 'min' => 0, 'max' => 100 ] ],
 			'default'     => [ 'size' => 50 ],
-			'selectors'   => [ '{{WRAPPER}}' => '--wps-av-x: {{SIZE}}%;' ],
 		] );
 
 		$this->add_control( 'avatar_pos_y', [
@@ -627,7 +625,6 @@ class Widget extends Widget_Base {
 			'type'        => Controls_Manager::SLIDER,
 			'range'       => [ 'px' => [ 'min' => 0, 'max' => 100 ] ],
 			'default'     => [ 'size' => 50 ],
-			'selectors'   => [ '{{WRAPPER}}' => '--wps-av-y: {{SIZE}}%;' ],
 		] );
 
 		$this->add_control( 'avatar_bg_color', [
@@ -635,18 +632,14 @@ class Widget extends Widget_Base {
 			'description' => esc_html__( 'Visible con object-fit: contain o imágenes PNG transparentes.', 'wp-stories' ),
 			'type'        => Controls_Manager::COLOR,
 			'default'     => '#333333',
-			'selectors'   => [ '{{WRAPPER}} .wps-avatar' => 'background: {{VALUE}};' ],
 		] );
 
 		$this->add_control( 'avatar_scale', [
 			'label'       => esc_html__( 'Escala imagen (%)', 'wp-stories' ),
 			'description' => esc_html__( '100 = normal · < 100 = más pequeña (deja margen) · > 100 = más grande (recorta)', 'wp-stories' ),
 			'type'        => Controls_Manager::SLIDER,
-			'range'       => [ 'px' => [ 'min' => 50, 'max' => 150, 'step' => 1 ] ],
+			'range'       => [ 'px' => [ 'min' => 10, 'max' => 200, 'step' => 1 ] ],
 			'default'     => [ 'size' => 100 ],
-			'selectors'   => [
-				'{{WRAPPER}} .wps-avatar img' => 'transform: scale({{SIZE}}%);',
-			],
 		] );
 
 		$this->end_controls_section();
@@ -765,6 +758,19 @@ class Widget extends Widget_Base {
 		}
 
 		$widget_id = 'wps-' . $this->get_id();
+
+		// ── Avatar image inline styles (these override any CSS-file defaults) ──
+		$av_fit   = esc_attr( $settings['avatar_fit'] ?? 'cover' );
+		$av_pos_x = isset( $settings['avatar_pos_x']['size'] ) ? (float) $settings['avatar_pos_x']['size'] : 50;
+		$av_pos_y = isset( $settings['avatar_pos_y']['size'] ) ? (float) $settings['avatar_pos_y']['size'] : 50;
+		$av_scale = isset( $settings['avatar_scale']['size']  ) ? (float) $settings['avatar_scale']['size']  : 100;
+		$av_bg    = $this->sanitize_color( $settings['avatar_bg_color'] ?? '#333333' ) ?: '#333333';
+
+		$av_img_style  = sprintf(
+			'object-fit:%s;object-position:%s%% %s%%;transform:scale(%s%%);transform-origin:center;',
+			$av_fit, $av_pos_x, $av_pos_y, $av_scale
+		);
+		$av_wrap_style = 'background:' . esc_attr( $av_bg ) . ';';
 		?>
 		<div
 			class="wps-stories-widget"
@@ -785,11 +791,12 @@ class Widget extends Widget_Base {
 					<?php echo $has_slides ? '' : 'disabled'; ?>
 				>
 					<span class="wps-ring-wrap">
-						<span class="wps-avatar">
+						<span class="wps-avatar" style="<?php echo $av_wrap_style; ?>">
 							<?php if ( ! empty( $story['avatar']['url'] ) ) : ?>
 								<img src="<?php echo esc_url( $story['avatar']['url'] ); ?>"
 								     alt="<?php echo esc_attr( $story['username'] ?? '' ); ?>"
-								     loading="lazy">
+								     loading="lazy"
+								     style="<?php echo $av_img_style; ?>">
 							<?php else : ?>
 								<span class="wps-avatar-placeholder"></span>
 							<?php endif; ?>
@@ -812,6 +819,15 @@ class Widget extends Widget_Base {
 	protected function content_template() {
 		?>
 		<#
+		// Avatar image inline styles – computed once, applied to every avatar
+		var avFit   = settings.avatar_fit || 'cover';
+		var avPosX  = ( settings.avatar_pos_x && settings.avatar_pos_x.size !== undefined ) ? settings.avatar_pos_x.size : 50;
+		var avPosY  = ( settings.avatar_pos_y && settings.avatar_pos_y.size !== undefined ) ? settings.avatar_pos_y.size : 50;
+		var avScale = ( settings.avatar_scale  && settings.avatar_scale.size  !== undefined ) ? settings.avatar_scale.size  : 100;
+		var avBg    = settings.avatar_bg_color || '#333333';
+		var avImgStyle  = 'object-fit:' + avFit + ';object-position:' + avPosX + '% ' + avPosY + '%;transform:scale(' + avScale + '%);transform-origin:center;';
+		var avWrapStyle = 'background:' + avBg + ';';
+
 		var storyData = [];
 		_.each( settings.stories, function( story, idx ) {
 			var slides = [];
@@ -891,9 +907,9 @@ class Widget extends Widget_Base {
 				#>
 				<button class="wps-story-circle" data-story-index="{{ idx }}">
 					<span class="wps-ring-wrap">
-						<span class="wps-avatar">
+						<span class="wps-avatar" style="{{ avWrapStyle }}">
 							<# if ( avatarUrl ) { #>
-								<img src="{{ avatarUrl }}" alt="{{ story.username }}">
+								<img src="{{ avatarUrl }}" alt="{{ story.username }}" style="{{ avImgStyle }}">
 							<# } else { #>
 								<span class="wps-avatar-placeholder"></span>
 							<# } #>
