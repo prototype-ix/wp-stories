@@ -1,6 +1,6 @@
 /**
  * WP Stories – Frontend Logic
- * Version: 0.0.10
+ * Version: 1.0
  * Author:  Alejandro Pantoja Malatesta / seekingdog.com
  */
 

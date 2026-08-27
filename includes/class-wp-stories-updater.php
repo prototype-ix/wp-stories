@@ -316,9 +316,9 @@ class Updater {
 		}
 
 		if ( 'available' === $status ) {
-			$message = sprintf( __( 'WP Stories %s is available. You can update it now.', 'wp-stories' ), $version );
+			$message = __( 'An update is available. Reload the page to display the WordPress update notice.', 'wp-stories' );
 		} elseif ( 'current' === $status ) {
-			$message = sprintf( __( 'WP Stories is up to date (version %s).', 'wp-stories' ), $this->current_version() );
+			$message = __( 'Everything is up to date.', 'wp-stories' );
 		} else {
 			$message = __( 'WP Stories could not contact GitHub. Please try again later.', 'wp-stories' );
 		}
@@ -334,6 +334,7 @@ class Updater {
 		$strings = wp_json_encode( [
 			'checking' => __( 'Checking…', 'wp-stories' ),
 			'error'    => __( 'The update check failed unexpectedly. Please try again.', 'wp-stories' ),
+			'reload'   => __( 'Reload page', 'wp-stories' ),
 		] );
 		?>
 		<script>
@@ -359,9 +360,9 @@ class Updater {
 					.then(function (response) { return response.json(); })
 					.then(function (response) {
 						if (!response.success || !response.data) throw new Error('Update check failed');
-						showNotice(response.data.message, response.data.status);
+						showResult(link, response.data.message, response.data.status);
 					})
-					.catch(function () { showNotice(strings.error, 'error'); })
+					.catch(function () { showResult(link, strings.error, 'error'); })
 					.finally(function () {
 						link.dataset.loading = '0';
 						link.textContent = originalLabel;
@@ -369,16 +370,27 @@ class Updater {
 					});
 			});
 
-			function showNotice(message, status) {
-				document.querySelectorAll('.wps-update-check-notice').forEach(function (notice) { notice.remove(); });
-				const notice = document.createElement('div');
-				notice.className = 'notice is-dismissible wps-update-check-notice ' +
-					(status === 'current' ? 'notice-success' : (status === 'available' ? 'notice-info' : 'notice-error'));
-				const paragraph = document.createElement('p');
-				paragraph.textContent = message;
-				notice.appendChild(paragraph);
-				const heading = document.querySelector('.wrap h1');
-				if (heading) heading.insertAdjacentElement('afterend', notice);
+			function showResult(link, message, status) {
+				document.querySelectorAll('.wps-update-check-result').forEach(function (result) { result.remove(); });
+				const result = document.createElement('span');
+				result.className = 'wps-update-check-result';
+				result.setAttribute('role', 'status');
+				result.setAttribute('aria-live', 'polite');
+				result.style.marginLeft = '8px';
+				result.style.fontWeight = '600';
+				result.style.color = status === 'current' ? '#008a20' : (status === 'available' ? '#b26200' : '#b32d2e');
+				result.appendChild(document.createTextNode(message));
+
+				if (status === 'available') {
+					result.appendChild(document.createTextNode(' '));
+					const reload = document.createElement('a');
+					reload.href = window.location.href;
+					reload.textContent = strings.reload;
+					reload.style.fontWeight = '600';
+					result.appendChild(reload);
+				}
+
+				link.insertAdjacentElement('afterend', result);
 			}
 		}());
 		</script>

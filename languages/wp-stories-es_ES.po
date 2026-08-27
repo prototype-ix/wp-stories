@@ -1,6 +1,6 @@
 msgid ""
 msgstr ""
-"Project-Id-Version: WP Stories 0.0.10\n"
+"Project-Id-Version: WP Stories 1.0\n"
 "Language: es_ES\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -221,6 +221,15 @@ msgstr "WP Stories está actualizado (versión %s)."
 
 msgid "WP Stories could not contact GitHub. Please try again later."
 msgstr "WP Stories no ha podido contactar con GitHub. Inténtalo de nuevo más tarde."
+
+msgid "An update is available. Reload the page to display the WordPress update notice."
+msgstr "Hay una actualización disponible. Recarga la página para mostrar el aviso de actualización de WordPress."
+
+msgid "Everything is up to date."
+msgstr "Todo correcto, no hay actualizaciones."
+
+msgid "Reload page"
+msgstr "Recargar página"
 
 msgid "Checking…"
 msgstr "Consultando…"
