@@ -1,6 +1,6 @@
 /* ==========================================================================
    WP Stories – Frontend Styles
-   Version: 0.0.9
+   Version: 0.0.10
    Author:  Alejandro Pantoja Malatesta / seekingdog.com
    ========================================================================== */
 
@@ -501,14 +501,17 @@
   border: none !important;
   color: #fff;
   -webkit-tap-highlight-color: transparent;
-  display: flex; align-items: center; justify-content: center;
+  display: flex !important; align-items: center !important; justify-content: center !important;
+  font-size: 0 !important;
+  text-align: center !important;
+  text-indent: 0 !important;
   -webkit-appearance: none; appearance: none;
 }
 .wps-close-btn:hover, .wps-close-btn:focus, .wps-close-btn:active {
   background: rgba(0,0,0,0.55) !important; outline: none;
 }
-.wps-close-btn svg {
-  width: 20px; height: 20px; display: block;
+.wps-viewer-overlay .wps-close-btn svg {
+  width: 22px !important; height: 22px !important; display: block !important;
   filter: drop-shadow(0 1px 3px rgba(0,0,0,0.5));
 }
 
@@ -527,9 +530,12 @@
   min-height: 48px !important; max-height: 48px !important;
   aspect-ratio: 1 / 1;
   cursor: pointer;
-  display: none;
-  align-items: center; justify-content: center;
+  display: none !important;
+  align-items: center !important; justify-content: center !important;
   color: #fff;
+  font-size: 0 !important;
+  text-align: center !important;
+  text-indent: 0 !important;
   transition: background 0.15s;
   -webkit-tap-highlight-color: transparent;
   -webkit-appearance: none; appearance: none;
@@ -538,8 +544,37 @@
 .wps-nav-btn:hover  { background: rgba(55,55,55,0.96) !important; border: none !important; }
 .wps-nav-btn:focus,
 .wps-nav-btn:active { background: rgba(26,26,26,0.78) !important; outline: none; }
-.wps-nav-btn svg { width: 25px; height: 25px; }
-@media (min-width: 640px) { .wps-nav-btn { display: flex; } }
+.wps-viewer-overlay .wps-nav-btn svg { width: 25px !important; height: 25px !important; }
+
+/* Prevent Elementor/themes from shifting the icons inside their circles. */
+.wps-viewer-overlay .wps-close-btn svg,
+.wps-viewer-overlay .wps-nav-btn svg {
+  position: static !important;
+  inset: auto !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  transform: none !important;
+  translate: none !important;
+  flex: 0 0 auto !important;
+  vertical-align: middle !important;
+  box-sizing: content-box !important;
+  line-height: 1 !important;
+}
+
+/* Higher specificity than common `.elementor button` rules. */
+.wps-viewer-overlay .wps-close-btn {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  text-align: center !important;
+}
+.wps-viewer-overlay .wps-nav-btn {
+  display: none !important;
+  align-items: center !important;
+  justify-content: center !important;
+  text-align: center !important;
+}
+@media (min-width: 640px) { .wps-viewer-overlay .wps-nav-btn { display: flex !important; } }
 
 /* --------------------------------------------------------------------------
    Tap Zones – completely invisible (hard theme reset)
@@ -584,7 +619,7 @@
     border: 1px solid rgba(255,255,255,0.72) !important;
   }
   .wps-close-btn:hover, .wps-close-btn:focus, .wps-close-btn:active { border: 1px solid #fff !important; }
-  .wps-close-btn svg { width: 25px; height: 25px; }
+  .wps-viewer-overlay .wps-close-btn svg { width: 25px !important; height: 25px !important; }
 }
 
 /* Swipe-to-close drag */
