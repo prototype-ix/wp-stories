@@ -1,0 +1,205 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: WP Stories 0.0.7\\n"
+"Language: es_ES\\n"
+"Content-Type: text/plain; charset=UTF-8\\n"
+"Content-Transfer-Encoding: 8bit\\n"
+"Plural-Forms: nplurals=2; plural=n != 1;\\n"
+
+msgid "WP Stories requires Elementor to be installed and activated."
+msgstr "WP Stories requiere que Elementor esté instalado y activado."
+
+msgid "Username / Title"
+msgstr "Usuario / título"
+
+msgid "Title Tag"
+msgstr "Etiqueta de título"
+
+msgid "Avatar Image"
+msgstr "Imagen de avatar"
+
+msgid "For the best result, use a square 1:1 image."
+msgstr "Para obtener el mejor resultado, utiliza una imagen cuadrada 1:1."
+
+msgid "Story Images"
+msgstr "Imágenes de la story"
+
+msgid "Seconds per slide"
+msgstr "Segundos por diapositiva"
+
+msgid "Image Fit"
+msgstr "Ajuste de imagen"
+
+msgid "Cover (fill, may crop)"
+msgstr "Cubrir (rellena, puede recortar)"
+
+msgid "Contain (full image visible)"
+msgstr "Contener (imagen completa visible)"
+
+msgid "Scale down (no stretch)"
+msgstr "Reducir (sin estirar)"
+
+msgid "── Link Button"
+msgstr "── Botón de enlace"
+
+msgid "Enable link"
+msgstr "Activar enlace"
+
+msgid "Destination URL"
+msgstr "URL de destino"
+
+msgid "Button Text"
+msgstr "Texto del botón"
+
+msgid "Vertical Position (%)"
+msgstr "Posición vertical (%)"
+
+msgid "Text Color"
+msgstr "Color de texto"
+
+msgid "Button Background"
+msgstr "Fondo del botón"
+
+msgid "Border Color"
+msgstr "Color del borde"
+
+msgid "Border Width (px)"
+msgstr "Grosor del borde (px)"
+
+msgid "Border Radius (px)"
+msgstr "Radio del borde (px)"
+
+msgid "Font Size (px)"
+msgstr "Tamaño de fuente (px)"
+
+msgid "Font Weight"
+msgstr "Grosor de fuente"
+
+msgid "Vertical Padding (px)"
+msgstr "Relleno vertical (px)"
+
+msgid "Horizontal Padding (px)"
+msgstr "Relleno horizontal (px)"
+
+msgid "Open In"
+msgstr "Abrir en"
+
+msgid "New tab"
+msgstr "Nueva pestaña"
+
+msgid "Same tab"
+msgstr "Misma pestaña"
+
+msgid "── Text Overlay"
+msgstr "── Texto superpuesto"
+
+msgid "Enable text"
+msgstr "Activar texto"
+
+msgid "Content (HTML allowed)"
+msgstr "Contenido (HTML permitido)"
+
+msgid "X Position (%)"
+msgstr "Posición X (%)"
+
+msgid "Y Position (%)"
+msgstr "Posición Y (%)"
+
+msgid "Horizontal Anchor"
+msgstr "Ancla horizontal"
+
+msgid "Container Width"
+msgstr "Ancho del contenedor"
+
+msgid "Minimum Height (px, 0 = auto)"
+msgstr "Altura mínima (px, 0 = automático)"
+
+msgid "Container Background"
+msgstr "Fondo del contenedor"
+
+msgid "Text Alignment"
+msgstr "Alineación del texto"
+
+msgid "Line Height"
+msgstr "Interlineado"
+
+msgid "Letter Spacing (px)"
+msgstr "Espaciado entre letras (px)"
+
+msgid "Avatar Circles"
+msgstr "Círculos de avatar"
+
+msgid "Circle Size (px)"
+msgstr "Tamaño del círculo (px)"
+
+msgid "Gap between circles (px)"
+msgstr "Espacio entre círculos (px)"
+
+msgid "Circle Alignment"
+msgstr "Alineación de círculos"
+
+msgid "Start"
+msgstr "Inicio"
+
+msgid "Center"
+msgstr "Centro"
+
+msgid "End"
+msgstr "Final"
+
+msgid "Space Between"
+msgstr "Espacio entre"
+
+msgid "Space Around"
+msgstr "Espacio alrededor"
+
+msgid "Space Evenly"
+msgstr "Espacio uniforme"
+
+msgid "Avatar Crop"
+msgstr "Recorte de avatar"
+
+msgid "Avatar Background Color"
+msgstr "Color de fondo del avatar"
+
+msgid "Image Scale (%)"
+msgstr "Escala de imagen (%)"
+
+msgid "Username Style"
+msgstr "Estilo de usuario"
+
+msgid "Viewer Style"
+msgstr "Estilo del visor"
+
+msgid "Viewer Background"
+msgstr "Fondo del visor"
+
+msgid "Progress Bar Color"
+msgstr "Color de la barra de progreso"
+
+msgid "Progress Bar Background"
+msgstr "Fondo de la barra de progreso"
+
+msgid "Close Button Color"
+msgstr "Color del botón de cerrar"
+
+msgid "Row Layout"
+msgstr "Diseño de fila"
+
+msgid "Row Background"
+msgstr "Fondo de fila"
+
+msgid "Row Padding"
+msgstr "Relleno de fila"
+
+msgid "Scrollbar"
+msgstr "Barra de desplazamiento"
+
+msgid "Show when needed"
+msgstr "Mostrar cuando sea necesario"
+
+msgid "Hidden"
+msgstr "Oculta"
+
+msgid "Open stories from %s"
+msgstr "Abrir stories de %s"

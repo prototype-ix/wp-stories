@@ -1,1 +1,27 @@
-Nothing to read
+# WP Stories
+
+A free, GPL-2.0-or-later Elementor widget for Instagram-style story galleries.
+
+## Features
+
+- Avatar story circles with customizable gradients and layout.
+- Full-screen story viewer with timed slides, tap controls and swipe gestures.
+- Desktop user previews with a smooth cube-style transition between users.
+- Native WordPress update notices powered by public GitHub Releases.
+- English source strings and Spanish (`es_ES`) translations.
+
+## Requirements
+
+- WordPress 5.9 or later
+- PHP 7.4 or later
+- Elementor installed and activated
+
+## Installing and updating
+
+Install the release ZIP from the [Releases page](https://github.com/prototype-ix/wp-stories/releases). After that, WordPress will detect newer GitHub Releases in **Dashboard → Updates** and can update the plugin normally.
+
+Each release asset is packaged with a `wp-stories/` top-level directory so WordPress preserves the plugin folder during automatic updates.
+
+## License
+
+WP Stories is licensed under the [GNU General Public License v2.0 or later](LICENSE).

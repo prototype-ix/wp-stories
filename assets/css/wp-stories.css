@@ -1,11 +1,11 @@
 /* ==========================================================================
    WP Stories – Frontend Styles
-   Version: 0.0.1b
+   Version: 0.0.7
    Author:  Alejandro Pantoja Malatesta / seekingdog.com
    ========================================================================== */
 
 /* --------------------------------------------------------------------------
-   CSS Custom Properties (defaults – overridden by Elementor selectors)
+   CSS Custom Properties
    -------------------------------------------------------------------------- */
 :root {
   --wps-circle-size:  72px;
@@ -13,37 +13,49 @@
   --wps-ring-end:     #c13584;
   --wps-ring-width:   3px;
   --wps-ring-gap:     2px;
+  --wps-firefox-scrollbar-width: thin;
+  --wps-scrollbar-display: block;
 }
 
 /* --------------------------------------------------------------------------
    Stories Row
    -------------------------------------------------------------------------- */
-.wps-stories-widget {
-  width: 100%;
-}
+.wps-stories-widget { width: 100%; }
 
 .wps-stories-row {
   display: flex;
   flex-direction: row;
   align-items: flex-start;
+  justify-content: flex-start;
   gap: 16px;
   overflow-x: auto;
   overflow-y: visible;
   scroll-behavior: smooth;
   -webkit-overflow-scrolling: touch;
   scroll-snap-type: x proximity;
-  scrollbar-width: none;          /* Firefox */
+  scrollbar-width: var(--wps-firefox-scrollbar-width, thin);
+  scrollbar-color: rgba(255,255,255,0.34) transparent;
   background: #1a1a1a;
-  padding: 12px 16px;
+  padding: 12px 16px 14px;
   box-sizing: border-box;
 }
-
 .wps-stories-row::-webkit-scrollbar {
-  display: none;                  /* Chrome / Safari */
+  display: var(--wps-scrollbar-display, block);
+  height: 6px;
+}
+.wps-stories-row::-webkit-scrollbar-track {
+  background: transparent;
+}
+.wps-stories-row::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.28);
+  border-radius: 999px;
+}
+.wps-stories-row::-webkit-scrollbar-thumb:hover {
+  background: rgba(255,255,255,0.42);
 }
 
 /* --------------------------------------------------------------------------
-   Story Circle Button
+   Story Circle Button – hard theme resets
    -------------------------------------------------------------------------- */
 .wps-story-circle {
   display: flex;
@@ -51,52 +63,77 @@
   align-items: center;
   gap: 6px;
   flex-shrink: 0;
-  background: transparent;
-  border: none;
-  padding: 0;
+  width: calc(
+    var(--wps-circle-size) +
+    var(--wps-ring-width) +
+    var(--wps-ring-width) +
+    var(--wps-ring-gap) +
+    var(--wps-ring-gap) +
+    24px
+  );
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  margin: 0;
   cursor: pointer;
   scroll-snap-align: start;
   -webkit-tap-highlight-color: transparent;
   outline: none;
+  -webkit-appearance: none;
+  appearance: none;
 }
-
+.wps-story-circle:hover,
+.wps-story-circle:focus,
+.wps-story-circle:active {
+  background: transparent !important;
+  background-color: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  outline: none;
+}
 .wps-story-circle:focus-visible .wps-ring-wrap {
   outline: 2px solid #fff;
   outline-offset: 3px;
 }
+.wps-story-circle.wps-no-slides { opacity: 0.45; cursor: default; }
 
-.wps-story-circle.wps-no-slides {
-  opacity: 0.45;
-  cursor: default;
-}
-
-/* Ring wrap – gradient border via pseudo-element */
+/* Ring wrap */
 .wps-ring-wrap {
   position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
-  width:  calc( var(--wps-circle-size) + ( var(--wps-ring-width) + var(--wps-ring-gap) ) * 2 );
-  height: calc( var(--wps-circle-size) + ( var(--wps-ring-width) + var(--wps-ring-gap) ) * 2 );
+  width: calc(
+    var(--wps-circle-size) +
+    var(--wps-ring-width) +
+    var(--wps-ring-width) +
+    var(--wps-ring-gap) +
+    var(--wps-ring-gap)
+  );
+  height: calc(
+    var(--wps-circle-size) +
+    var(--wps-ring-width) +
+    var(--wps-ring-width) +
+    var(--wps-ring-gap) +
+    var(--wps-ring-gap)
+  );
   border-radius: 50%;
   background: linear-gradient( 45deg, var(--wps-ring-start), var(--wps-ring-end) );
   padding: var(--wps-ring-width);
   box-sizing: border-box;
   transition: transform 0.18s ease;
 }
-
 .wps-story-circle:hover .wps-ring-wrap,
-.wps-story-circle:active .wps-ring-wrap {
-  transform: scale(1.07);
-}
-
-/* Inner "gap" ring using the avatar background colour */
+.wps-story-circle:active .wps-ring-wrap { transform: scale(1.07); }
 .wps-ring-wrap::before {
   content: '';
   position: absolute;
   inset: var(--wps-ring-width);
   border-radius: 50%;
-  background: #1a1a1a;             /* matches row background */
+  background: #1a1a1a;
   pointer-events: none;
 }
 
@@ -110,41 +147,42 @@
   z-index: 1;
   background: #333;
 }
-
 .wps-avatar img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+  width: 100%; height: 100%;
   display: block;
-  border-radius: 50%;
-  pointer-events: none;
-  user-select: none;
-  -webkit-user-drag: none;
+  pointer-events: none; user-select: none; -webkit-user-drag: none;
+  /* border-radius is intentionally NOT set here — the parent's overflow:hidden
+     + border-radius:50% handles the circular crop without sub-pixel artifacts. */
+  object-fit: cover !important;
+  object-position: var(--wps-av-x, 50%) var(--wps-av-y, 50%);
 }
-
 .wps-avatar-placeholder {
-  display: block;
-  width: 100%;
-  height: 100%;
-  background: #555;
-  border-radius: 50%;
+  display: block; width: 100%; height: 100%;
+  background: #555; border-radius: 50%;
 }
 
 /* Username label */
 .wps-story-label {
-  display: block;
+  display: -webkit-box;
   color: #fff;
-  font-size: 11px;
-  line-height: 1.2;
-  text-align: center;
-  max-width: calc( var(--wps-circle-size) + 16px );
-  white-space: nowrap;
+  font-size: 11px; line-height: 1.25; text-align: center;
+  width: 100%;
+  max-width: 100%;
+  min-height: 2.5em;
+  white-space: normal;
   overflow: hidden;
   text-overflow: ellipsis;
-  margin: 0;
-  padding: 0;
-  font-weight: 400;
+  overflow-wrap: anywhere;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  margin: 0; padding: 0; font-weight: 400;
   pointer-events: none;
+  background: transparent !important;
+}
+
+/* Seen ring */
+.wps-story-circle.wps-seen .wps-ring-wrap {
+  background: linear-gradient(45deg, #888, #666);
 }
 
 /* --------------------------------------------------------------------------
@@ -154,42 +192,101 @@
   position: fixed;
   inset: 0;
   z-index: 99999;
-  background: #000;
+  background: rgba(0, 0, 0, 0.92);
   display: flex;
   align-items: center;
   justify-content: center;
-
-  /* Entry / exit animation */
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.22s ease;
 }
-
 .wps-viewer-overlay.wps-visible {
   opacity: 1;
   pointer-events: all;
 }
 
 /* --------------------------------------------------------------------------
-   Story Viewport (the "phone" card in desktop, full-screen on mobile)
+   Viewer Inner – flex row
    -------------------------------------------------------------------------- */
-.wps-story-viewport {
+.wps-viewer-inner {
   position: relative;
-  width: min(420px, 100vw);
-  height: min(746px, 100vh);        /* ~9:16 on desktop */
-  overflow: hidden;
-  background: #111;
-  border-radius: 0;
-}
-
-@media (min-width: 480px) {
-  .wps-story-viewport {
-    border-radius: 14px;
-  }
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  width: 100%;
+  height: 100%;
+  padding: 0 12px;
+  box-sizing: border-box;
 }
 
 /* --------------------------------------------------------------------------
-   Story Image
+   Story Viewport
+   -------------------------------------------------------------------------- */
+.wps-story-viewport {
+  position: relative;
+  width: min(390px, 100vw);
+  height: min(692px, 100dvh);
+  flex-shrink: 0;
+  overflow: hidden;
+  background: #111;
+  border-radius: 0;
+  /* Entry animation */
+  transform: scale(0.96);
+  transition: transform 0.22s ease;
+}
+@media (min-width: 480px) {
+  .wps-story-viewport { border-radius: 14px; }
+}
+.wps-viewer-overlay.wps-visible .wps-story-viewport {
+  transform: scale(1);
+}
+
+/* --------------------------------------------------------------------------
+   Side Previews (desktop)
+   -------------------------------------------------------------------------- */
+.wps-side-preview {
+  flex-shrink: 0;
+  width: 130px;
+  height: 230px;
+  border-radius: 10px;
+  overflow: hidden;
+  cursor: pointer;
+  position: relative;
+  background: #1a1a1a;
+  opacity: 0.55;
+  transform: scale(0.94);
+  transition: opacity 0.2s, transform 0.2s;
+  display: none;
+}
+.wps-side-preview:hover { opacity: 0.8; transform: scale(0.97); }
+@media (min-width: 860px)  { .wps-side-preview { display: block; } }
+@media (min-width: 1100px) { .wps-side-preview { width: 160px; height: 284px; } }
+
+.wps-side-preview > img {
+  width: 100%; height: 100%; object-fit: cover; object-position: center center; display: block;
+}
+.wps-side-preview-info {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  padding: 28px 8px 10px;
+  background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, transparent 100%);
+  display: flex; align-items: flex-end; gap: 6px;
+}
+.wps-side-preview-avatar {
+  width: 24px; height: 24px; border-radius: 50%;
+  overflow: hidden; flex-shrink: 0;
+  border: 1.5px solid rgba(255,255,255,0.7); background: #333;
+}
+.wps-side-preview-avatar img { width: 100%; height: 100%; object-fit: cover; object-position: center center; display: block; }
+.wps-side-preview-name {
+  color: #fff; font-size: 11px; font-weight: 600;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.6); line-height: 1.2;
+}
+
+/* --------------------------------------------------------------------------
+   Story Images
    -------------------------------------------------------------------------- */
 .wps-story-image {
   position: absolute;
@@ -198,241 +295,269 @@
   align-items: center;
   justify-content: center;
   opacity: 0;
-  transition: opacity 0.25s ease;
+  transition: opacity 0.2s ease;
   pointer-events: none;
+  z-index: 1;
 }
-
-.wps-story-image.wps-active {
-  opacity: 1;
-  pointer-events: all;
-}
-
+.wps-story-image.wps-active { opacity: 1; pointer-events: all; }
 .wps-story-image img {
   display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: contain;             /* default; overridden per-slide by JS */
-  pointer-events: none;
-  user-select: none;
-  -webkit-user-drag: none;
+  width: 100%; height: 100%;
+  object-fit: cover;
+  object-position: center center;
+  pointer-events: none; user-select: none; -webkit-user-drag: none;
 }
 
 /* --------------------------------------------------------------------------
-   Progress Bars
+   Link Button – Wallapop/Instagram style (white pill, dark text + icon)
+   All colour/size values are overridden by inline styles from JS config.
+   -------------------------------------------------------------------------- */
+.wps-link-btn {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 15;           /* above tap zones (z-5) */
+
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+  text-decoration: none;
+  cursor: pointer;
+  box-sizing: border-box;
+
+  /* Default: white pill with dark text (Wallapop look) */
+  bottom: 15%;
+  color: #1a1a1a;
+  background: #ffffff;
+  border: 1.5px solid rgba(0, 0, 0, 0.12);
+  border-radius: 50px;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 10px 22px;
+  letter-spacing: 0.01em;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.18);
+
+  -webkit-tap-highlight-color: transparent;
+  transition: opacity 0.15s, box-shadow 0.15s;
+}
+.wps-link-btn:hover  { opacity: 0.88; box-shadow: 0 4px 18px rgba(0,0,0,0.25); }
+.wps-link-btn:active { opacity: 0.72; }
+.wps-link-btn:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
+
+/* Icon wrapper */
+.wps-link-btn-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 1.15em;
+  height: 1.15em;
+}
+.wps-link-btn-icon svg,
+.wps-link-icon {
+  width: 1.15em; height: 1.15em;
+  display: block;
+  vertical-align: middle;
+}
+/* For class-based icons (Font Awesome, Eicons) */
+.wps-link-btn .wps-link-icon {
+  font-size: inherit;
+  line-height: 1;
+}
+
+/* --------------------------------------------------------------------------
+   Text Overlay
+   -------------------------------------------------------------------------- */
+.wps-text-overlay {
+  position: absolute;
+  z-index: 6;           /* above image, pointer-events none → taps pass through */
+  pointer-events: none;
+
+  /* Defaults (overridden by inline styles from config) */
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 80%;
+  color: #fff;
+  font-size: 16px;
+  line-height: 1.4;
+  text-align: center;
+  padding: 12px 16px;
+  border-radius: 8px;
+  box-sizing: border-box;
+  word-break: break-word;
+}
+/* Allow links and interactive elements inside text overlay */
+.wps-text-overlay a {
+  pointer-events: all;
+  color: inherit;
+  text-decoration: underline;
+}
+
+/* --------------------------------------------------------------------------
+   Progress Bar
    -------------------------------------------------------------------------- */
 .wps-progress-bar {
   position: absolute;
-  top: 10px;
-  left: 10px;
-  right: 10px;
-  display: flex;
-  gap: 3px;
+  top: 10px; left: 8px; right: 8px;
+  display: flex; gap: 3px;
   z-index: 10;
 }
-
 .wps-progress-segment {
-  flex: 1;
-  height: 2px;
-  border-radius: 2px;
+  flex: 1; height: 2px; border-radius: 2px;
   background: rgba(255, 255, 255, 0.35);
-  overflow: hidden;
-  position: relative;
+  overflow: hidden; position: relative;
 }
-
 .wps-progress-fill {
-  position: absolute;
-  top: 0;
-  left: 0;
-  height: 100%;
-  width: 0%;
-  background: #fff;
-  border-radius: 2px;
-  transform-origin: left center;
+  position: absolute; top: 0; left: 0;
+  height: 100%; width: 0%;
+  background: #fff; border-radius: 2px;
 }
-
-.wps-progress-fill.wps-done {
-  width: 100%;
-  transition: none;
-}
+.wps-progress-fill.wps-done { width: 100%; transition: none; }
 
 /* --------------------------------------------------------------------------
-   Story Header (avatar + username inside viewer)
+   Story Header
    -------------------------------------------------------------------------- */
 .wps-story-header {
   position: absolute;
-  top: 22px;
-  left: 10px;
-  right: 50px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  z-index: 10;
-  pointer-events: none;
+  top: 22px; left: 10px; right: 50px;
+  display: flex; align-items: center; gap: 10px;
+  z-index: 10; pointer-events: none;
 }
-
 .wps-story-header-avatar {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  overflow: hidden;
-  border: 1.5px solid rgba(255,255,255,0.7);
-  flex-shrink: 0;
-  background: #333;
+  width: 32px; height: 32px; border-radius: 50%;
+  overflow: hidden; border: 1.5px solid rgba(255,255,255,0.7);
+  flex-shrink: 0; background: #333;
 }
-
-.wps-story-header-avatar img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
-
+.wps-story-header-avatar img { width: 100%; height: 100%; object-fit: cover; object-position: center center; display: block; }
 .wps-story-header-name {
-  color: #fff;
-  font-size: 13px;
-  font-weight: 600;
+  color: #fff; font-size: 13px; font-weight: 600;
   text-shadow: 0 1px 3px rgba(0,0,0,0.6);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 
 /* --------------------------------------------------------------------------
    Close Button
    -------------------------------------------------------------------------- */
 .wps-close-btn {
-  position: absolute;
-  top: 16px;
-  right: 12px;
+  position: absolute !important;
+  top: 12px; right: 12px;
   z-index: 20;
-  background: transparent;
-  border: none;
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  border: none !important;
+  box-shadow: none !important;
   cursor: pointer;
-  padding: 6px;
-  line-height: 1;
+  width: 44px; height: 44px;
+  padding: 0; line-height: 1;
+  border-radius: 50% !important;
+  background: rgba(0,0,0,0.38) !important;
+  border: 1px solid rgba(255,255,255,0.72) !important;
   color: #fff;
   -webkit-tap-highlight-color: transparent;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: flex; align-items: center; justify-content: center;
+  -webkit-appearance: none; appearance: none;
 }
-
+.wps-close-btn:hover, .wps-close-btn:focus, .wps-close-btn:active {
+  background: rgba(0,0,0,0.62) !important; border: 1px solid #fff !important; outline: none;
+}
 .wps-close-btn svg {
-  width: 22px;
-  height: 22px;
-  display: block;
+  width: 25px; height: 25px; display: block;
   filter: drop-shadow(0 1px 3px rgba(0,0,0,0.5));
 }
 
 /* --------------------------------------------------------------------------
-   Desktop Side Navigation Arrows
+   Desktop Nav Arrows
    -------------------------------------------------------------------------- */
 .wps-nav-btn {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
+  flex-shrink: 0;
   z-index: 20;
-  background: rgba(0,0,0,0.45);
-  border: none;
+  background: rgba(26,26,26,0.78) !important;
+  border: 1px solid rgba(255,255,255,0.62) !important;
+  box-shadow: none !important;
   border-radius: 50%;
-  width: 42px;
-  height: 42px;
+  width: 48px; height: 48px;
   cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: none;
+  align-items: center; justify-content: center;
   color: #fff;
   transition: background 0.15s;
   -webkit-tap-highlight-color: transparent;
+  -webkit-appearance: none; appearance: none;
+  padding: 0;
 }
-
-.wps-nav-btn:hover {
-  background: rgba(0,0,0,0.7);
-}
-
-.wps-nav-btn svg {
-  width: 20px;
-  height: 20px;
-}
-
-.wps-nav-prev { left:  -58px; }
-.wps-nav-next { right: -58px; }
-
-/* Hide side arrows on mobile – tap zones handle navigation */
-@media (max-width: 640px) {
-  .wps-nav-btn { display: none; }
-}
+.wps-nav-btn:hover  { background: rgba(26,26,26,0.95) !important; border-color: #fff !important; }
+.wps-nav-btn:focus,
+.wps-nav-btn:active { background: rgba(26,26,26,0.78) !important; outline: none; }
+.wps-nav-btn svg { width: 25px; height: 25px; }
+@media (min-width: 640px) { .wps-nav-btn { display: flex; } }
 
 /* --------------------------------------------------------------------------
-   Tap Zones (invisible overlays for story prev/next via tap – mobile & desktop)
+   Tap Zones – completely invisible (hard theme reset)
    -------------------------------------------------------------------------- */
 .wps-tap-prev,
 .wps-tap-next {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  width: 35%;
+  position: absolute !important;
+  top: 0 !important; bottom: 0 !important;
   z-index: 5;
   cursor: pointer;
-  background: transparent;
-  border: none;
-  padding: 0;
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  outline: none !important;
+  padding: 0 !important; margin: 0 !important;
+  color: transparent !important;
+  -webkit-appearance: none !important; appearance: none !important;
   -webkit-tap-highlight-color: transparent;
-  outline: none;
+}
+.wps-tap-prev:hover, .wps-tap-prev:focus, .wps-tap-prev:active,
+.wps-tap-next:hover, .wps-tap-next:focus, .wps-tap-next:active {
+  background: transparent !important;
+  background-color: transparent !important;
+  border: none !important; box-shadow: none !important; outline: none !important;
+}
+.wps-tap-prev { left: 0;  width: 35% !important; }
+.wps-tap-next { right: 0; width: 65% !important; }
+
+/* Modern cube-like transition for changing to an adjacent user. */
+.wps-story-viewport.wps-user-exit-left  { animation: wpsCubeExitLeft  0.17s cubic-bezier(.4,0,.2,1) forwards; }
+.wps-story-viewport.wps-user-exit-right { animation: wpsCubeExitRight 0.17s cubic-bezier(.4,0,.2,1) forwards; }
+.wps-story-viewport.wps-user-enter-left { animation: wpsCubeEnterLeft 0.26s cubic-bezier(.16,1,.3,1) forwards; }
+.wps-story-viewport.wps-user-enter-right { animation: wpsCubeEnterRight 0.26s cubic-bezier(.16,1,.3,1) forwards; }
+@keyframes wpsCubeExitLeft { from { opacity:1; transform:perspective(1100px) rotateY(0) translateX(0); } to { opacity:.15; transform:perspective(1100px) rotateY(-18deg) translateX(-8%); } }
+@keyframes wpsCubeExitRight { from { opacity:1; transform:perspective(1100px) rotateY(0) translateX(0); } to { opacity:.15; transform:perspective(1100px) rotateY(18deg) translateX(8%); } }
+@keyframes wpsCubeEnterLeft { from { opacity:.15; transform:perspective(1100px) rotateY(18deg) translateX(8%); } to { opacity:1; transform:perspective(1100px) rotateY(0) translateX(0); } }
+@keyframes wpsCubeEnterRight { from { opacity:.15; transform:perspective(1100px) rotateY(-18deg) translateX(-8%); } to { opacity:1; transform:perspective(1100px) rotateY(0) translateX(0); } }
+
+@media (min-width: 640px) {
+  /* Keep the desktop close control just outside the story instead of over it. */
+  .wps-close-btn {
+    top: calc(50% - min(346px, 50dvh) + 2px);
+    right: auto;
+    left: calc(50% + min(195px, 50vw) + 14px);
+  }
 }
 
-.wps-tap-prev { left: 0; }
-.wps-tap-next { right: 0; width: 65%; }
+/* Swipe-to-close drag */
+.wps-story-viewport.wps-dragging { transition: none !important; }
 
 /* --------------------------------------------------------------------------
-   Swipe slide transition helpers
+   Body lock
    -------------------------------------------------------------------------- */
-.wps-story-viewport.wps-swipe-left {
-  animation: wpsSlideLeft 0.28s ease forwards;
-}
-
-.wps-story-viewport.wps-swipe-right {
-  animation: wpsSlideRight 0.28s ease forwards;
-}
-
-@keyframes wpsSlideLeft {
-  from { transform: translateX(0);    opacity: 1; }
-  to   { transform: translateX(-8%);  opacity: 0; }
-}
-
-@keyframes wpsSlideRight {
-  from { transform: translateX(0);    opacity: 1; }
-  to   { transform: translateX(8%);   opacity: 0; }
-}
-
-/* Viewer entrance animation */
-.wps-story-viewport {
-  transform: scale(0.96);
-  transition: transform 0.22s ease, opacity 0.22s ease;
-}
-
-.wps-viewer-overlay.wps-visible .wps-story-viewport {
-  transform: scale(1);
-}
+body.wps-open { overflow: hidden; touch-action: none; }
 
 /* --------------------------------------------------------------------------
-   Swipe-down-to-close visual feedback (mobile)
+   Elementor Editor Preview Mode
+   – Full-screen overlay inside the iframe, same as frontend.
+     The Elementor panel sidebar is outside the iframe so it is never covered.
+     Side previews and nav arrows are hidden to keep it compact.
    -------------------------------------------------------------------------- */
-.wps-story-viewport.wps-dragging {
-  transition: none !important;
-}
-
-/* --------------------------------------------------------------------------
-   Seen ring state
-   -------------------------------------------------------------------------- */
-.wps-story-circle.wps-seen .wps-ring-wrap {
-  background: #888;
-}
-
-/* --------------------------------------------------------------------------
-   Body lock when viewer is open
-   -------------------------------------------------------------------------- */
-body.wps-open {
-  overflow: hidden;
-  touch-action: none;
+.wps-viewer-overlay.wps-edit-mode .wps-side-preview,
+.wps-viewer-overlay.wps-edit-mode .wps-nav-btn {
+  display: none !important;
 }
