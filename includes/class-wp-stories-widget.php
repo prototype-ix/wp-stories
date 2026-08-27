@@ -180,7 +180,7 @@ class Widget extends Widget_Base {
 					var existing = row.querySelector(\'.wps-inline-preview\');
 					if (existing) {
 						existing.remove();
-						btn.textContent = \'▶ Preview story\';
+						btn.textContent = \'▶ ' . esc_js( __( 'Preview story', 'wp-stories' ) ) . '\';
 						return;
 					}
 
@@ -237,18 +237,18 @@ class Widget extends Widget_Base {
 						}
 					} else {
 						var msg = document.createElement(\'p\');
-						msg.textContent = \'No images — add photos in "Story Images".\';
+						msg.textContent = \'' . esc_js( __( 'No images — add photos in "Story Images".', 'wp-stories' ) ) . '\';
 						msg.style.cssText = \'color:#888;text-align:center;padding:14px 8px;margin:0;font-size:11px;\';
 						wrap.appendChild(msg);
 					}
 
 					btn.insertAdjacentElement(\'afterend\', wrap);
-					btn.textContent = \'✕ Close preview\';
+					btn.textContent = \'✕ ' . esc_js( __( 'Close preview', 'wp-stories' ) ) . '\';
 
 					/* Open full viewer in preview iframe */
 					var fr = document.getElementById(\'elementor-preview-iframe\');
 					if (fr) fr.contentWindow.postMessage({type:\'wps-preview-open\',idx:idx},\'*\');
-				})(this)">▶ Preview story</button>',
+				})(this)">▶ ' . esc_html__( 'Preview story', 'wp-stories' ) . '</button>',
 			'content_classes' => 'elementor-descriptor',
 		] );
 

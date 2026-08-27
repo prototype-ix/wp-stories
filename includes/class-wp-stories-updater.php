@@ -77,8 +77,8 @@ class Updater {
 
 		// Add a manual update check alongside the standard plugin actions.
 		add_filter( 'plugin_action_links_' . $this->plugin_slug, [ $this, 'action_links' ] );
-		add_action( 'admin_init', [ $this, 'maybe_check_updates' ] );
-		add_action( 'admin_notices', [ $this, 'update_check_notice' ] );
+		add_action( 'wp_ajax_wps_check_updates', [ $this, 'ajax_check_updates' ] );
+		add_action( 'admin_footer-plugins.php', [ $this, 'render_update_check_script' ] );
 	}
 
 	/* ------------------------------------------------------------------
@@ -289,26 +289,19 @@ class Updater {
 			return $links;
 		}
 
-		$url = wp_nonce_url(
-			add_query_arg( 'wps_check_updates', '1', admin_url( 'plugins.php' ) ),
-			'wps_check_updates'
-		);
-
-		$links[] = '<a href="' . esc_url( $url ) . '">' . esc_html__( 'Check for updates', 'wp-stories' ) . '</a>';
+		$links[] = '<a href="#" class="wps-check-updates" data-nonce="'
+			. esc_attr( wp_create_nonce( 'wps_check_updates' ) ) . '">'
+			. esc_html__( 'Check for updates', 'wp-stories' ) . '</a>';
 		return $links;
 	}
 
-	/** Clear caches and ask WordPress/GitHub for the latest release immediately. */
-	public function maybe_check_updates(): void {
-		if ( ! isset( $_GET['wps_check_updates'] ) ) {
-			return;
-		}
-
+	/** AJAX: clear caches and ask WordPress/GitHub for the latest release. */
+	public function ajax_check_updates(): void {
 		if ( ! current_user_can( 'update_plugins' ) ) {
-			wp_die( esc_html__( 'You are not allowed to update plugins.', 'wp-stories' ) );
+			wp_send_json_error( [ 'message' => __( 'You are not allowed to update plugins.', 'wp-stories' ) ], 403 );
 		}
 
-		check_admin_referer( 'wps_check_updates' );
+		check_ajax_referer( 'wps_check_updates', 'nonce' );
 		delete_transient( $this->cache_key );
 		delete_site_transient( 'update_plugins' );
 
@@ -322,37 +315,73 @@ class Updater {
 			wp_update_plugins();
 		}
 
-		$redirect = add_query_arg(
-			[
-				'wps_update_check' => $status,
-				'wps_version'      => $version,
-			],
-			admin_url( 'plugins.php' )
-		);
-		wp_safe_redirect( $redirect );
-		exit;
-	}
-
-	/** Show the result of a manual update check. */
-	public function update_check_notice(): void {
-		if ( empty( $_GET['wps_update_check'] ) ) {
-			return;
-		}
-
-		$status  = sanitize_key( wp_unslash( $_GET['wps_update_check'] ) );
-		$version = isset( $_GET['wps_version'] ) ? sanitize_text_field( wp_unslash( $_GET['wps_version'] ) ) : '';
-
 		if ( 'available' === $status ) {
 			$message = sprintf( __( 'WP Stories %s is available. You can update it now.', 'wp-stories' ), $version );
-			$class   = 'notice notice-info is-dismissible';
 		} elseif ( 'current' === $status ) {
 			$message = sprintf( __( 'WP Stories is up to date (version %s).', 'wp-stories' ), $this->current_version() );
-			$class   = 'notice notice-success is-dismissible';
 		} else {
 			$message = __( 'WP Stories could not contact GitHub. Please try again later.', 'wp-stories' );
-			$class   = 'notice notice-error is-dismissible';
 		}
 
-		echo '<div class="' . esc_attr( $class ) . '"><p>' . esc_html( $message ) . '</p></div>';
+		wp_send_json_success( [
+			'status'  => $status,
+			'message' => $message,
+		] );
+	}
+
+	/** Render the tiny AJAX controller only on the Plugins screen. */
+	public function render_update_check_script(): void {
+		$strings = wp_json_encode( [
+			'checking' => __( 'Checking…', 'wp-stories' ),
+			'error'    => __( 'The update check failed unexpectedly. Please try again.', 'wp-stories' ),
+		] );
+		?>
+		<script>
+		(function () {
+			'use strict';
+			const strings = <?php echo $strings; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>;
+			document.addEventListener('click', function (event) {
+				const link = event.target.closest('.wps-check-updates');
+				if (!link) return;
+				event.preventDefault();
+				if (link.dataset.loading === '1') return;
+
+				const originalLabel = link.textContent;
+				link.dataset.loading = '1';
+				link.textContent = strings.checking;
+				link.setAttribute('aria-busy', 'true');
+
+				const body = new FormData();
+				body.append('action', 'wps_check_updates');
+				body.append('nonce', link.dataset.nonce);
+
+				fetch(window.ajaxurl, { method: 'POST', credentials: 'same-origin', body: body })
+					.then(function (response) { return response.json(); })
+					.then(function (response) {
+						if (!response.success || !response.data) throw new Error('Update check failed');
+						showNotice(response.data.message, response.data.status);
+					})
+					.catch(function () { showNotice(strings.error, 'error'); })
+					.finally(function () {
+						link.dataset.loading = '0';
+						link.textContent = originalLabel;
+						link.removeAttribute('aria-busy');
+					});
+			});
+
+			function showNotice(message, status) {
+				document.querySelectorAll('.wps-update-check-notice').forEach(function (notice) { notice.remove(); });
+				const notice = document.createElement('div');
+				notice.className = 'notice is-dismissible wps-update-check-notice ' +
+					(status === 'current' ? 'notice-success' : (status === 'available' ? 'notice-info' : 'notice-error'));
+				const paragraph = document.createElement('p');
+				paragraph.textContent = message;
+				notice.appendChild(paragraph);
+				const heading = document.querySelector('.wrap h1');
+				if (heading) heading.insertAdjacentElement('afterend', notice);
+			}
+		}());
+		</script>
+		<?php
 	}
 }

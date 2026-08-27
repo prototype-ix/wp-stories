@@ -1,6 +1,6 @@
 msgid ""
 msgstr ""
-"Project-Id-Version: WP Stories 0.0.8\n"
+"Project-Id-Version: WP Stories 0.0.9\n"
 "Language: es_ES\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -221,3 +221,99 @@ msgstr "WP Stories está actualizado (versión %s)."
 
 msgid "WP Stories could not contact GitHub. Please try again later."
 msgstr "WP Stories no ha podido contactar con GitHub. Inténtalo de nuevo más tarde."
+
+msgid "Checking…"
+msgstr "Consultando…"
+
+msgid "The update check failed unexpectedly. Please try again."
+msgstr "La consulta de actualizaciones ha fallado inesperadamente. Inténtalo de nuevo."
+
+msgid "Preview story"
+msgstr "Previsualizar story"
+
+msgid "Close preview"
+msgstr "Cerrar previsualización"
+
+msgid "No images — add photos in \"Story Images\"."
+msgstr "No hay imágenes — añade fotos en \"Imágenes de la story\"."
+
+msgid "0 = left · 50 = center · 100 = right"
+msgstr "0 = izquierda · 50 = centro · 100 = derecha"
+
+msgid "0 = top · 100 = bottom"
+msgstr "0 = arriba · 100 = abajo"
+
+msgid "0 = top · 100 = bottom · 85 = near the bottom"
+msgstr "0 = arriba · 100 = abajo · 85 = cerca del final"
+
+msgid "0 = top · 50 = center · 100 = bottom"
+msgstr "0 = arriba · 50 = centro · 100 = abajo"
+
+msgid "100 = normal · < 100 = smaller · > 100 = larger (crops)"
+msgstr "100 = normal · < 100 = más pequeña · > 100 = más grande (recorta)"
+
+msgid "Center of the container"
+msgstr "Centro del contenedor"
+
+msgid "Color"
+msgstr "Color"
+
+msgid "Cover (fill circle, no stretch)"
+msgstr "Cubrir (rellena el círculo sin deformar)"
+
+msgid "Horizontal Position (%)"
+msgstr "Posición horizontal (%)"
+
+msgid "Icon"
+msgstr "Icono"
+
+msgid "Left"
+msgstr "Izquierda"
+
+msgid "Left edge of the container"
+msgstr "Borde izquierdo del contenedor"
+
+msgid "Match this to the story row background. Default: #1a1a1a."
+msgstr "Haz que coincida con el fondo de la fila de stories. Por defecto: #1a1a1a."
+
+msgid "Right"
+msgstr "Derecha"
+
+msgid "Right edge of the container"
+msgstr "Borde derecho del contenedor"
+
+msgid "Ring Gap Background Color"
+msgstr "Color de fondo del espacio del anillo"
+
+msgid "Ring Gradient End"
+msgstr "Final del degradado del anillo"
+
+msgid "Ring Gradient Start"
+msgstr "Inicio del degradado del anillo"
+
+msgid "Ring Width (px)"
+msgstr "Grosor del anillo (px)"
+
+msgid "Ring-to-avatar gap (px)"
+msgstr "Espacio entre anillo y avatar (px)"
+
+msgid "Stories"
+msgstr "Stories"
+
+msgid "Visible with transparent PNGs."
+msgstr "Visible con archivos PNG transparentes."
+
+msgid "WP Stories"
+msgstr "WP Stories"
+
+msgid "Stories viewer"
+msgstr "Visor de stories"
+
+msgid "Close stories"
+msgstr "Cerrar stories"
+
+msgid "Previous slide"
+msgstr "Diapositiva anterior"
+
+msgid "Next slide"
+msgstr "Diapositiva siguiente"

@@ -1,6 +1,6 @@
 /* ==========================================================================
    WP Stories – Frontend Styles
-   Version: 0.0.8
+   Version: 0.0.9
    Author:  Alejandro Pantoja Malatesta / seekingdog.com
    ========================================================================== */
 
@@ -216,30 +216,71 @@
   gap: 14px;
   width: 100%;
   height: 100%;
-  padding: 0 12px;
+  padding: 0;
   box-sizing: border-box;
 }
+
+/* Full-screen mobile stage and 3D cube container. */
+.wps-cube-stage {
+  --wps-cube-depth: 50vw;
+  position: relative;
+  width: 100vw;
+  height: 100dvh;
+  flex: 0 0 auto;
+  perspective: 1200px;
+  transform: scale(0.98);
+  transition: transform 0.22s ease;
+}
+.wps-viewer-overlay.wps-visible .wps-cube-stage { transform: scale(1); }
+.wps-cube-rotator {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+  transform: translateZ(calc(var(--wps-cube-depth) * -1));
+  transition: transform 0.52s cubic-bezier(.65,0,.2,1);
+}
+.wps-cube-rotator.wps-cube-turn-left {
+  transform: translateZ(calc(var(--wps-cube-depth) * -1)) rotateY(-90deg);
+}
+.wps-cube-rotator.wps-cube-turn-right {
+  transform: translateZ(calc(var(--wps-cube-depth) * -1)) rotateY(90deg);
+}
+.wps-cube-rotator.wps-cube-reset { transition: none !important; }
 
 /* --------------------------------------------------------------------------
    Story Viewport
    -------------------------------------------------------------------------- */
-.wps-story-viewport {
-  position: relative;
-  width: min(390px, 100vw);
-  height: min(692px, 100dvh);
-  flex-shrink: 0;
+.wps-story-viewport,
+.wps-cube-face {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
   overflow: hidden;
   background: #111;
   border-radius: 0;
-  /* Entry animation */
-  transform: scale(0.96);
-  transition: transform 0.22s ease;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
 }
-@media (min-width: 480px) {
-  .wps-story-viewport { border-radius: 14px; }
+.wps-story-viewport { transform: rotateY(0deg) translateZ(var(--wps-cube-depth)); }
+.wps-cube-face-right { transform: rotateY(90deg) translateZ(var(--wps-cube-depth)); }
+.wps-cube-face-left { transform: rotateY(-90deg) translateZ(var(--wps-cube-depth)); }
+.wps-cube-face-image {
+  width: 100%; height: 100%; display: block;
+  object-position: center; background: #111;
 }
-.wps-viewer-overlay.wps-visible .wps-story-viewport {
-  transform: scale(1);
+.wps-cube-face-progress,
+.wps-cube-face-header { z-index: 3; }
+
+@media (min-width: 640px) {
+  .wps-viewer-inner { padding: 0 12px; }
+  .wps-cube-stage {
+    --wps-cube-depth: calc(min(390px, 100vw) / 2);
+    width: min(390px, 100vw);
+    height: min(692px, 100dvh);
+  }
+  .wps-story-viewport,
+  .wps-cube-face { border-radius: 14px; }
 }
 
 /* --------------------------------------------------------------------------
@@ -450,21 +491,24 @@
   border: none !important;
   box-shadow: none !important;
   cursor: pointer;
-  width: 44px; height: 44px;
-  padding: 0; line-height: 1;
-  border-radius: 50% !important;
-  background: rgba(0,0,0,0.38) !important;
-  border: 1px solid rgba(255,255,255,0.72) !important;
+  width: 32px !important; height: 32px !important;
+  min-width: 32px !important; max-width: 32px !important;
+  min-height: 32px !important; max-height: 32px !important;
+  aspect-ratio: 1 / 1;
+  padding: 0 !important; line-height: 0 !important;
+  border-radius: 999px !important;
+  background: rgba(0,0,0,0.32) !important;
+  border: none !important;
   color: #fff;
   -webkit-tap-highlight-color: transparent;
   display: flex; align-items: center; justify-content: center;
   -webkit-appearance: none; appearance: none;
 }
 .wps-close-btn:hover, .wps-close-btn:focus, .wps-close-btn:active {
-  background: rgba(0,0,0,0.62) !important; border: 1px solid #fff !important; outline: none;
+  background: rgba(0,0,0,0.55) !important; outline: none;
 }
 .wps-close-btn svg {
-  width: 25px; height: 25px; display: block;
+  width: 20px; height: 20px; display: block;
   filter: drop-shadow(0 1px 3px rgba(0,0,0,0.5));
 }
 
@@ -475,10 +519,13 @@
   flex-shrink: 0;
   z-index: 20;
   background: rgba(26,26,26,0.78) !important;
-  border: 1px solid rgba(255,255,255,0.62) !important;
+  border: none !important;
   box-shadow: none !important;
-  border-radius: 50%;
-  width: 48px; height: 48px;
+  border-radius: 999px !important;
+  width: 48px !important; height: 48px !important;
+  min-width: 48px !important; max-width: 48px !important;
+  min-height: 48px !important; max-height: 48px !important;
+  aspect-ratio: 1 / 1;
   cursor: pointer;
   display: none;
   align-items: center; justify-content: center;
@@ -486,9 +533,9 @@
   transition: background 0.15s;
   -webkit-tap-highlight-color: transparent;
   -webkit-appearance: none; appearance: none;
-  padding: 0;
+  padding: 0 !important;
 }
-.wps-nav-btn:hover  { background: rgba(26,26,26,0.95) !important; border-color: #fff !important; }
+.wps-nav-btn:hover  { background: rgba(55,55,55,0.96) !important; border: none !important; }
 .wps-nav-btn:focus,
 .wps-nav-btn:active { background: rgba(26,26,26,0.78) !important; outline: none; }
 .wps-nav-btn svg { width: 25px; height: 25px; }
@@ -524,23 +571,20 @@
 .wps-tap-prev { left: 0;  width: 35% !important; }
 .wps-tap-next { right: 0; width: 65% !important; }
 
-/* Modern cube-like transition for changing to an adjacent user. */
-.wps-story-viewport.wps-user-exit-left  { animation: wpsCubeExitLeft  0.17s cubic-bezier(.4,0,.2,1) forwards; }
-.wps-story-viewport.wps-user-exit-right { animation: wpsCubeExitRight 0.17s cubic-bezier(.4,0,.2,1) forwards; }
-.wps-story-viewport.wps-user-enter-left { animation: wpsCubeEnterLeft 0.26s cubic-bezier(.16,1,.3,1) forwards; }
-.wps-story-viewport.wps-user-enter-right { animation: wpsCubeEnterRight 0.26s cubic-bezier(.16,1,.3,1) forwards; }
-@keyframes wpsCubeExitLeft { from { opacity:1; transform:perspective(1100px) rotateY(0) translateX(0); } to { opacity:.15; transform:perspective(1100px) rotateY(-18deg) translateX(-8%); } }
-@keyframes wpsCubeExitRight { from { opacity:1; transform:perspective(1100px) rotateY(0) translateX(0); } to { opacity:.15; transform:perspective(1100px) rotateY(18deg) translateX(8%); } }
-@keyframes wpsCubeEnterLeft { from { opacity:.15; transform:perspective(1100px) rotateY(18deg) translateX(8%); } to { opacity:1; transform:perspective(1100px) rotateY(0) translateX(0); } }
-@keyframes wpsCubeEnterRight { from { opacity:.15; transform:perspective(1100px) rotateY(-18deg) translateX(-8%); } to { opacity:1; transform:perspective(1100px) rotateY(0) translateX(0); } }
-
 @media (min-width: 640px) {
   /* Keep the desktop close control just outside the story instead of over it. */
   .wps-close-btn {
     top: calc(50% - min(346px, 50dvh) + 2px);
     right: auto;
     left: calc(50% + min(195px, 50vw) + 14px);
+    width: 44px !important; height: 44px !important;
+    min-width: 44px !important; max-width: 44px !important;
+    min-height: 44px !important; max-height: 44px !important;
+    background: rgba(0,0,0,0.38) !important;
+    border: 1px solid rgba(255,255,255,0.72) !important;
   }
+  .wps-close-btn:hover, .wps-close-btn:focus, .wps-close-btn:active { border: 1px solid #fff !important; }
+  .wps-close-btn svg { width: 25px; height: 25px; }
 }
 
 /* Swipe-to-close drag */

@@ -3,7 +3,7 @@
  * Plugin Name:  WP Stories
  * Plugin URI:   https://seekingdog.com/
  * Description:  Instagram-style stories gallery widget for Elementor. Add a circle-avatar story row to any page — click opens a full-screen stories lightbox with auto-advancing slides and swipe/tap gestures.
- * Version:      0.0.8
+ * Version:      0.0.9
  * Author:       Alejandro Pantoja Malatesta
  * Author URI:   https://seekingdog.com/
  * License:      GPL-2.0+
@@ -20,7 +20,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'WP_STORIES_VERSION', '0.0.8' );
+define( 'WP_STORIES_VERSION', '0.0.9' );
 define( 'WP_STORIES_FILE',    __FILE__ );
 define( 'WP_STORIES_PATH',    plugin_dir_path( __FILE__ ) );
 define( 'WP_STORIES_URL',     plugin_dir_url( __FILE__ ) );
@@ -92,6 +92,13 @@ function wp_stories_enqueue_assets() {
 		WP_STORIES_VERSION,
 		true
 	);
+
+	wp_localize_script( 'wp-stories', 'wpStoriesI18n', [
+		'viewerLabel'  => __( 'Stories viewer', 'wp-stories' ),
+		'closeStories' => __( 'Close stories', 'wp-stories' ),
+		'previousSlide'=> __( 'Previous slide', 'wp-stories' ),
+		'nextSlide'    => __( 'Next slide', 'wp-stories' ),
+	] );
 }
 
 function wp_stories_elementor_missing_notice() {

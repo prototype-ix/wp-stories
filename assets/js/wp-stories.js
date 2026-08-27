@@ -1,6 +1,6 @@
 /**
  * WP Stories – Frontend Logic
- * Version: 0.0.8
+ * Version: 0.0.9
  * Author:  Alejandro Pantoja Malatesta / seekingdog.com
  */
 
@@ -33,11 +33,12 @@
   /* =========================================================================
    * DOM References (built once)
    * ====================================================================== */
-  let overlay, viewerInner, viewport, progressBar, header, closeBtn,
+  let overlay, viewerInner, cubeStage, cubeRotator, viewport, progressBar, header, closeBtn,
       navPrev, navNext, tapPrev, tapNext, sidePrevEl, sideNextEl;
 
   // Fallback SVG used when no iconHtml is pre-rendered (e.g. fresh editor instance).
   const FALLBACK_LINK_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="wps-link-icon"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>';
+  const I18N = window.wpStoriesI18n || {};
 
   /* =========================================================================
    * Build overlay DOM (once)
@@ -54,7 +55,7 @@
     overlay.id        = 'wps-viewer-overlay';
     overlay.setAttribute( 'role', 'dialog' );
     overlay.setAttribute( 'aria-modal', 'true' );
-    overlay.setAttribute( 'aria-label', 'Stories viewer' );
+    overlay.setAttribute( 'aria-label', I18N.viewerLabel || 'Stories viewer' );
 
     // Inner flex row: [sidePrev][navPrev][viewport][navNext][sideNext]
     viewerInner = document.createElement( 'div' );
@@ -73,13 +74,18 @@
     // Nav prev
     navPrev = document.createElement( 'button' );
     navPrev.className = 'wps-nav-btn wps-nav-prev';
-    navPrev.setAttribute( 'aria-label', 'Previous story' );
+    navPrev.setAttribute( 'aria-label', I18N.previousSlide || 'Previous slide' );
     navPrev.type = 'button';
     navPrev.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>';
 
     // Main viewport
     viewport = document.createElement( 'div' );
-    viewport.className = 'wps-story-viewport';
+    viewport.className = 'wps-story-viewport wps-cube-current';
+
+    cubeStage = document.createElement( 'div' );
+    cubeStage.className = 'wps-cube-stage';
+    cubeRotator = document.createElement( 'div' );
+    cubeRotator.className = 'wps-cube-rotator';
 
     progressBar = document.createElement( 'div' );
     progressBar.className = 'wps-progress-bar';
@@ -93,28 +99,30 @@
     closeBtn = document.createElement( 'button' );
     closeBtn.className = 'wps-close-btn';
     closeBtn.type = 'button';
-    closeBtn.setAttribute( 'aria-label', 'Close stories' );
+    closeBtn.setAttribute( 'aria-label', I18N.closeStories || 'Close stories' );
     closeBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
 
     tapPrev = document.createElement( 'button' );
     tapPrev.className = 'wps-tap-prev';
-    tapPrev.setAttribute( 'aria-label', 'Previous slide' );
+    tapPrev.setAttribute( 'aria-label', I18N.previousSlide || 'Previous slide' );
     tapPrev.type = 'button';
 
     tapNext = document.createElement( 'button' );
     tapNext.className = 'wps-tap-next';
-    tapNext.setAttribute( 'aria-label', 'Next slide' );
+    tapNext.setAttribute( 'aria-label', I18N.nextSlide || 'Next slide' );
     tapNext.type = 'button';
 
     viewport.appendChild( progressBar );
     viewport.appendChild( header );
     viewport.appendChild( tapPrev );
     viewport.appendChild( tapNext );
+    cubeRotator.appendChild( viewport );
+    cubeStage.appendChild( cubeRotator );
 
     // Nav next
     navNext = document.createElement( 'button' );
     navNext.className = 'wps-nav-btn wps-nav-next';
-    navNext.setAttribute( 'aria-label', 'Next story' );
+    navNext.setAttribute( 'aria-label', I18N.nextSlide || 'Next slide' );
     navNext.type = 'button';
     navNext.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>';
 
@@ -130,7 +138,7 @@
 
     viewerInner.appendChild( sidePrevEl );
     viewerInner.appendChild( navPrev );
-    viewerInner.appendChild( viewport );
+    viewerInner.appendChild( cubeStage );
     viewerInner.appendChild( closeBtn );
     viewerInner.appendChild( navNext );
     viewerInner.appendChild( sideNextEl );
@@ -140,8 +148,8 @@
     // Events
     closeBtn.addEventListener( 'click', closeViewer );
     // The arrows advance slides; the adjacent user cards change users.
-    navPrev.addEventListener( 'click', prevSlide );
-    navNext.addEventListener( 'click', nextSlide );
+    navPrev.addEventListener( 'click', function() { prevSlide( false ); } );
+    navNext.addEventListener( 'click', function() { nextSlide( false ); } );
     sidePrevEl.addEventListener( 'click', function() { changeUser( currentUserIdx - 1, 'right' ); } );
     sideNextEl.addEventListener( 'click', function() { changeUser( currentUserIdx + 1, 'left' ); } );
     tapPrev.addEventListener( 'click', prevSlide );
@@ -183,6 +191,8 @@
     overlay.style.opacity = '';
     viewport.style.transform = '';
     viewport.classList.remove( 'wps-dragging' );
+    cubeRotator.classList.remove( 'wps-cube-turn-left', 'wps-cube-turn-right' );
+    cubeRotator.querySelectorAll( '.wps-cube-face' ).forEach( function( face ) { face.remove(); } );
     document.body.classList.remove( 'wps-open' );
 
     window.setTimeout( function() {
@@ -373,10 +383,8 @@
       sidePrevEl.querySelector( '.wps-side-preview-avatar img' ).src = prev.avatar || '';
       sidePrevEl.querySelector( '.wps-side-preview-name' ).textContent = prev.username || '';
       sidePrevEl.style.visibility = '';
-      navPrev.style.visibility    = '';
     } else {
       sidePrevEl.style.visibility = 'hidden';
-      navPrev.style.visibility    = 'hidden';
     }
 
     if ( userIdx < stories.length - 1 ) {
@@ -387,10 +395,8 @@
       sideNextEl.querySelector( '.wps-side-preview-avatar img' ).src = next.avatar || '';
       sideNextEl.querySelector( '.wps-side-preview-name' ).textContent = next.username || '';
       sideNextEl.style.visibility = '';
-      navNext.style.visibility    = '';
     } else {
       sideNextEl.style.visibility = 'hidden';
-      navNext.style.visibility    = 'hidden';
     }
   }
 
@@ -403,6 +409,8 @@
     if ( ! user || ! user.slides ) return;
 
     currentSlideIdx = slideIdx;
+    navPrev.style.visibility = slideIdx > 0 ? '' : 'hidden';
+    navNext.style.visibility = slideIdx < user.slides.length - 1 ? '' : 'hidden';
 
     viewport.querySelectorAll( '.wps-story-image' ).forEach( function( el ) {
       el.classList.toggle( 'wps-active', parseInt( el.dataset.index, 10 ) === slideIdx );
@@ -420,7 +428,7 @@
     startTimer( duration );
   }
 
-  function nextSlide() {
+  function nextSlide( allowUserAdvance ) {
     if ( ! activeWidget ) return;
     const user = activeWidget.stories[ currentUserIdx ];
     if ( ! user ) return;
@@ -431,18 +439,22 @@
 
     if ( currentSlideIdx < ( user.slides || [] ).length - 1 ) {
       showSlide( currentSlideIdx + 1 );
-    } else {
+    } else if ( allowUserAdvance !== false ) {
       changeUser( currentUserIdx + 1, 'left' );
+    } else {
+      showSlide( currentSlideIdx );
     }
   }
 
-  function prevSlide() {
+  function prevSlide( allowUserAdvance ) {
     if ( ! activeWidget ) return;
     stopTimer();
     if ( currentSlideIdx > 0 ) {
       showSlide( currentSlideIdx - 1 );
-    } else {
+    } else if ( allowUserAdvance !== false ) {
       changeUser( currentUserIdx - 1, 'right' );
+    } else {
+      showSlide( currentSlideIdx );
     }
   }
 
@@ -456,20 +468,70 @@
       return;
     }
 
-    stopTimer();
-    currentSlideIdx = 0;
-    currentUserIdx  = newIdx;
+    if ( cubeRotator.classList.contains( 'wps-cube-turn-left' ) ||
+         cubeRotator.classList.contains( 'wps-cube-turn-right' ) ) return;
 
-    const exitClass  = direction === 'left' ? 'wps-user-exit-left' : 'wps-user-exit-right';
-    const enterClass = direction === 'left' ? 'wps-user-enter-left' : 'wps-user-enter-right';
-    viewport.classList.add( exitClass );
+    stopTimer();
+    const incoming = buildCubeFace( activeWidget.stories[ newIdx ], direction );
+    const turnClass = direction === 'left' ? 'wps-cube-turn-left' : 'wps-cube-turn-right';
+    cubeRotator.appendChild( incoming );
+
+    // Force the incoming 90-degree face to be painted before rotating the cube.
+    void cubeRotator.offsetWidth;
+    cubeRotator.classList.add( turnClass );
 
     setTimeout( function() {
-      viewport.classList.remove( exitClass );
+      currentSlideIdx = 0;
+      currentUserIdx  = newIdx;
+      cubeRotator.classList.add( 'wps-cube-reset' );
+      cubeRotator.classList.remove( turnClass );
+      incoming.remove();
       renderUser( currentUserIdx );
-      viewport.classList.add( enterClass );
-      setTimeout( function() { viewport.classList.remove( enterClass ); }, 260 );
-    }, 170 );
+      void cubeRotator.offsetWidth;
+      cubeRotator.classList.remove( 'wps-cube-reset' );
+    }, 520 );
+  }
+
+  /** Build the visible incoming side of the cube with the next user's first story. */
+  function buildCubeFace( user, direction ) {
+    const face = document.createElement( 'div' );
+    face.className = 'wps-cube-face ' + ( direction === 'left' ? 'wps-cube-face-right' : 'wps-cube-face-left' );
+
+    const firstSlide = user.slides && user.slides[0];
+    if ( firstSlide ) {
+      const image = document.createElement( 'img' );
+      image.className = 'wps-cube-face-image';
+      image.src = firstSlide.src || '';
+      image.alt = firstSlide.alt || '';
+      image.style.objectFit = firstSlide.fit || 'cover';
+      face.appendChild( image );
+    }
+
+    const faceProgress = document.createElement( 'div' );
+    faceProgress.className = 'wps-progress-bar wps-cube-face-progress';
+    ( user.slides || [] ).forEach( function() {
+      const segment = document.createElement( 'div' );
+      segment.className = 'wps-progress-segment';
+      faceProgress.appendChild( segment );
+    } );
+    face.appendChild( faceProgress );
+
+    const faceHeader = document.createElement( 'div' );
+    faceHeader.className = 'wps-story-header wps-cube-face-header';
+    const avatar = document.createElement( 'div' );
+    avatar.className = 'wps-story-header-avatar';
+    const avatarImage = document.createElement( 'img' );
+    avatarImage.src = user.avatar || '';
+    avatarImage.alt = user.username || '';
+    avatar.appendChild( avatarImage );
+    const name = document.createElement( 'span' );
+    name.className = 'wps-story-header-name';
+    name.textContent = user.username || '';
+    faceHeader.appendChild( avatar );
+    faceHeader.appendChild( name );
+    face.appendChild( faceHeader );
+
+    return face;
   }
 
   /* =========================================================================
