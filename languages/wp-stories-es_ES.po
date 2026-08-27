@@ -1,10 +1,10 @@
 msgid ""
 msgstr ""
-"Project-Id-Version: WP Stories 0.0.7\\n"
-"Language: es_ES\\n"
-"Content-Type: text/plain; charset=UTF-8\\n"
-"Content-Transfer-Encoding: 8bit\\n"
-"Plural-Forms: nplurals=2; plural=n != 1;\\n"
+"Project-Id-Version: WP Stories 0.0.8\n"
+"Language: es_ES\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=n != 1;\n"
 
 msgid "WP Stories requires Elementor to be installed and activated."
 msgstr "WP Stories requiere que Elementor esté instalado y activado."
@@ -203,3 +203,21 @@ msgstr "Oculta"
 
 msgid "Open stories from %s"
 msgstr "Abrir stories de %s"
+
+msgid "View GitHub Releases"
+msgstr "Ver releases en GitHub"
+
+msgid "Check for updates"
+msgstr "Consultar actualizaciones"
+
+msgid "You are not allowed to update plugins."
+msgstr "No tienes permisos para actualizar plugins."
+
+msgid "WP Stories %s is available. You can update it now."
+msgstr "WP Stories %s está disponible. Ya puedes actualizarlo."
+
+msgid "WP Stories is up to date (version %s)."
+msgstr "WP Stories está actualizado (versión %s)."
+
+msgid "WP Stories could not contact GitHub. Please try again later."
+msgstr "WP Stories no ha podido contactar con GitHub. Inténtalo de nuevo más tarde."

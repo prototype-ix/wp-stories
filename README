@@ -7,7 +7,7 @@ A free, GPL-2.0-or-later Elementor widget for Instagram-style story galleries.
 - Avatar story circles with customizable gradients and layout.
 - Full-screen story viewer with timed slides, tap controls and swipe gestures.
 - Desktop user previews with a smooth cube-style transition between users.
-- Native WordPress update notices powered by public GitHub Releases.
+- Native WordPress update notices powered by public GitHub Releases, with a manual check link on the Plugins screen.
 - English source strings and Spanish (`es_ES`) translations.
 
 ## Requirements

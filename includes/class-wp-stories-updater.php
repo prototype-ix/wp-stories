@@ -75,8 +75,10 @@ class Updater {
 		// Clear cached release data after a successful update.
 		add_action( 'upgrader_process_complete', [ $this, 'after_update' ], 10, 2 );
 
-		// Allow admins to purge the cache manually via ?wps_purge_update_cache=1.
-		add_action( 'admin_init', [ $this, 'maybe_purge_cache' ] );
+		// Add a manual update check alongside the standard plugin actions.
+		add_filter( 'plugin_action_links_' . $this->plugin_slug, [ $this, 'action_links' ] );
+		add_action( 'admin_init', [ $this, 'maybe_check_updates' ] );
+		add_action( 'admin_notices', [ $this, 'update_check_notice' ] );
 	}
 
 	/* ------------------------------------------------------------------
@@ -152,7 +154,7 @@ class Updater {
 		// If a .zip asset was uploaded to the release, use it (cleaner folder name).
 		if ( ! empty( $release->assets ) ) {
 			foreach ( $release->assets as $asset ) {
-				if ( str_ends_with( $asset->name, '.zip' ) ) {
+				if ( '.zip' === strtolower( substr( $asset->name, -4 ) ) ) {
 					// For private repos the asset URL requires auth; use the API redirect.
 					return $this->github_token
 						? $asset->url   // 'Accept: application/octet-stream' handled by WP upgrader
@@ -237,7 +239,7 @@ class Updater {
 			'last_updated'  => $release->published_at ?? '',
 			'sections'      => [
 				'description' => $data['Description'] ?? '',
-				'changelog'   => $changelog ?: '<p>Ver <a href="https://github.com/' . esc_attr( $this->github_user ) . '/' . esc_attr( $this->github_repo ) . '/releases">GitHub Releases</a>.</p>',
+				'changelog'   => $changelog ?: '<p><a href="https://github.com/' . esc_attr( $this->github_user ) . '/' . esc_attr( $this->github_repo ) . '/releases">' . esc_html__( 'View GitHub Releases', 'wp-stories' ) . '</a>.</p>',
 			],
 		];
 	}
@@ -281,13 +283,76 @@ class Updater {
 		}
 	}
 
-	/** Allow manual cache purge: visit any admin page with ?wps_purge_update_cache=1 */
-	public function maybe_purge_cache(): void {
-		if ( isset( $_GET['wps_purge_update_cache'] ) && current_user_can( 'update_plugins' ) ) {
-			delete_transient( $this->cache_key );
-			delete_site_transient( 'update_plugins' );
-			wp_safe_redirect( remove_query_arg( 'wps_purge_update_cache' ) );
-			exit;
+	/** Add the manual update-check link to this plugin's row. */
+	public function action_links( array $links ): array {
+		if ( ! current_user_can( 'update_plugins' ) ) {
+			return $links;
 		}
+
+		$url = wp_nonce_url(
+			add_query_arg( 'wps_check_updates', '1', admin_url( 'plugins.php' ) ),
+			'wps_check_updates'
+		);
+
+		$links[] = '<a href="' . esc_url( $url ) . '">' . esc_html__( 'Check for updates', 'wp-stories' ) . '</a>';
+		return $links;
+	}
+
+	/** Clear caches and ask WordPress/GitHub for the latest release immediately. */
+	public function maybe_check_updates(): void {
+		if ( ! isset( $_GET['wps_check_updates'] ) ) {
+			return;
+		}
+
+		if ( ! current_user_can( 'update_plugins' ) ) {
+			wp_die( esc_html__( 'You are not allowed to update plugins.', 'wp-stories' ) );
+		}
+
+		check_admin_referer( 'wps_check_updates' );
+		delete_transient( $this->cache_key );
+		delete_site_transient( 'update_plugins' );
+
+		$release = $this->get_remote_release();
+		$status  = 'error';
+		$version = '';
+
+		if ( $release ) {
+			$version = $this->clean_version( $release->tag_name );
+			$status  = version_compare( $version, $this->current_version(), '>' ) ? 'available' : 'current';
+			wp_update_plugins();
+		}
+
+		$redirect = add_query_arg(
+			[
+				'wps_update_check' => $status,
+				'wps_version'      => $version,
+			],
+			admin_url( 'plugins.php' )
+		);
+		wp_safe_redirect( $redirect );
+		exit;
+	}
+
+	/** Show the result of a manual update check. */
+	public function update_check_notice(): void {
+		if ( empty( $_GET['wps_update_check'] ) ) {
+			return;
+		}
+
+		$status  = sanitize_key( wp_unslash( $_GET['wps_update_check'] ) );
+		$version = isset( $_GET['wps_version'] ) ? sanitize_text_field( wp_unslash( $_GET['wps_version'] ) ) : '';
+
+		if ( 'available' === $status ) {
+			$message = sprintf( __( 'WP Stories %s is available. You can update it now.', 'wp-stories' ), $version );
+			$class   = 'notice notice-info is-dismissible';
+		} elseif ( 'current' === $status ) {
+			$message = sprintf( __( 'WP Stories is up to date (version %s).', 'wp-stories' ), $this->current_version() );
+			$class   = 'notice notice-success is-dismissible';
+		} else {
+			$message = __( 'WP Stories could not contact GitHub. Please try again later.', 'wp-stories' );
+			$class   = 'notice notice-error is-dismissible';
+		}
+
+		echo '<div class="' . esc_attr( $class ) . '"><p>' . esc_html( $message ) . '</p></div>';
 	}
 }
